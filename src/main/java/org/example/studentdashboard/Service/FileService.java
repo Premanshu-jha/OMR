@@ -15,7 +15,7 @@ public class FileService {
     @Autowired
     GridFsTemplate gridFsTemplate;
 
-    public String saveOmrFile(MultipartFile file) throws IOException {
+    public String uploadOmrFile(MultipartFile file) throws IOException {
         OmrFile metaData = new OmrFile();
         metaData.setFileName(file.getOriginalFilename());
         metaData.setFileType(file.getContentType());
