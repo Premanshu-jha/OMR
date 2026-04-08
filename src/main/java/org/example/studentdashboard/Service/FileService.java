@@ -1,8 +1,12 @@
 package org.example.studentdashboard.Service;
 
+import com.mongodb.client.gridfs.model.GridFSFile;
 import org.bson.types.ObjectId;
 import org.example.studentdashboard.Models.OmrFile;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.mongodb.core.query.Criteria;
+import org.springframework.data.mongodb.core.query.Query;
+import org.springframework.data.mongodb.gridfs.GridFsResource;
 import org.springframework.data.mongodb.gridfs.GridFsTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
@@ -15,9 +19,18 @@ public class FileService {
     @Autowired
     GridFsTemplate gridFsTemplate;
 
+    public GridFSFile getFileLabel(String fileId){
+        GridFSFile gridFSFile = gridFsTemplate.findOne(new Query(Criteria.where("_id").is(new ObjectId(fileId))));
+        if(gridFSFile == null) throw new RuntimeException("File not found for the given id");
+        return gridFSFile;
+    }
+
     public String uploadOmrFile(MultipartFile file) throws IOException {
+        String originalFileName = file.getOriginalFilename();
+        Query query = new Query(Criteria.where("filename").is(originalFileName));
+        gridFsTemplate.delete(query);
         OmrFile metaData = new OmrFile();
-        metaData.setFileName(file.getOriginalFilename());
+        metaData.setFileName(originalFileName);
         metaData.setFileType(file.getContentType());
         metaData.setFileSize(file.getSize());
         metaData.setUploadedAt(ZonedDateTime.now());
@@ -26,5 +39,14 @@ public class FileService {
                 file.getOriginalFilename(),file.getContentType(),metaData);
 
         return fileId.toString();
+    }
+
+    public GridFsResource downloadOmrFile(String fileId){
+        GridFSFile gridFSFile = getFileLabel(fileId);
+        return gridFsTemplate.getResource(gridFSFile);
+    }
+
+    public GridFSFile getOmrFile(String fileId){
+         return getFileLabel(fileId);
     }
 }
