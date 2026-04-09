@@ -25,6 +25,11 @@ public class FileService {
         return gridFSFile;
     }
 
+    public void deleteFile(String fileId){
+        Query query = new Query(Criteria.where("_id").is(new ObjectId(fileId)));
+        gridFsTemplate.delete(query);
+    }
+
     public String uploadOmrFile(MultipartFile file) throws IOException {
         String originalFileName = file.getOriginalFilename();
         Query query = new Query(Criteria.where("filename").is(originalFileName));
@@ -41,12 +46,9 @@ public class FileService {
         return fileId.toString();
     }
 
-    public GridFsResource downloadOmrFile(String fileId){
+    public GridFsResource getOmrFileResource(String fileId){
         GridFSFile gridFSFile = getFileLabel(fileId);
         return gridFsTemplate.getResource(gridFSFile);
     }
 
-    public GridFSFile getOmrFile(String fileId){
-         return getFileLabel(fileId);
-    }
 }
