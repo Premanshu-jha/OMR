@@ -12,7 +12,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
-import java.time.ZonedDateTime;
+import java.time.Instant;
 
 @Service
 public class FileService {
@@ -25,11 +25,12 @@ public class FileService {
         return gridFSFile;
     }
 
-    public void deleteFile(String fileId){
-        Query query = new Query(Criteria.where("_id").is(new ObjectId(fileId)));
-        gridFsTemplate.delete(query);
+    public void deleteFile(String fileId) {
+        ObjectId objId = new ObjectId(fileId);
+        gridFsTemplate.delete(new Query(Criteria.where("_id").is(objId)));
+        Query chunkQuery = new Query(Criteria.where("files_id").is(objId));
+        gridFsTemplate.delete(chunkQuery);
     }
-
     public String uploadOmrFile(MultipartFile file) throws IOException {
         String originalFileName = file.getOriginalFilename();
         Query query = new Query(Criteria.where("filename").is(originalFileName));
@@ -38,7 +39,7 @@ public class FileService {
         metaData.setFileName(originalFileName);
         metaData.setFileType(file.getContentType());
         metaData.setFileSize(file.getSize());
-        metaData.setUploadedAt(ZonedDateTime.now());
+        metaData.setUploadedAt(Instant.now());
 
         ObjectId fileId = gridFsTemplate.store(file.getInputStream(),
                 file.getOriginalFilename(),file.getContentType(),metaData);
