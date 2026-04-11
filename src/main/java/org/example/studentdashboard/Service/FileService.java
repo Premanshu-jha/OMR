@@ -1,23 +1,34 @@
 package org.example.studentdashboard.Service;
-
 import com.mongodb.client.gridfs.model.GridFSFile;
 import org.bson.types.ObjectId;
+import org.example.studentdashboard.Models.DownloadStatus;
 import org.example.studentdashboard.Models.OmrFile;
+import org.example.studentdashboard.Repositories.DownloadStatusRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.mongodb.core.query.Criteria;
 import org.springframework.data.mongodb.core.query.Query;
 import org.springframework.data.mongodb.gridfs.GridFsResource;
 import org.springframework.data.mongodb.gridfs.GridFsTemplate;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.MediaType;
+import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
+import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.multipart.MultipartFile;
+import org.springframework.web.servlet.mvc.method.annotation.StreamingResponseBody;
 
 import java.io.IOException;
+import java.io.InputStream;
 import java.time.Instant;
 
 @Service
 public class FileService {
     @Autowired
     GridFsTemplate gridFsTemplate;
+
+    @Autowired
+    DownloadStatusRepository statusRepository;
+
 
     public GridFSFile getFileLabel(String fileId){
         GridFSFile gridFSFile = gridFsTemplate.findOne(new Query(Criteria.where("_id").is(new ObjectId(fileId))));
@@ -35,11 +46,7 @@ public class FileService {
         String originalFileName = file.getOriginalFilename();
         Query query = new Query(Criteria.where("filename").is(originalFileName));
         gridFsTemplate.delete(query);
-        OmrFile metaData = new OmrFile();
-        metaData.setFileName(originalFileName);
-        metaData.setFileType(file.getContentType());
-        metaData.setFileSize(file.getSize());
-        metaData.setUploadedAt(Instant.now());
+        OmrFile metaData = new OmrFile(originalFileName,file.getContentType(),file.getSize(),Instant.now());
 
         ObjectId fileId = gridFsTemplate.store(file.getInputStream(),
                 file.getOriginalFilename(),file.getContentType(),metaData);
@@ -47,9 +54,40 @@ public class FileService {
         return fileId.toString();
     }
 
-    public GridFsResource getOmrFileResource(String fileId){
-        GridFSFile gridFSFile = getFileLabel(fileId);
-        return gridFsTemplate.getResource(gridFSFile);
+
+
+    public DownloadStatus getDownloadStatus(String fileId){
+         return statusRepository.findById(fileId)
+                 .orElse(new DownloadStatus(fileId,"NOT STARTED"));
+    }
+
+    public ResponseEntity<StreamingResponseBody> downloadFile(@PathVariable String fileId) throws IOException{
+        GridFsResource gridFsResource = gridFsTemplate.getResource(getFileLabel(fileId));
+        statusRepository.save(new DownloadStatus(fileId,"PENDING"));
+        StreamingResponseBody responseBody = outputStream -> {
+            try(InputStream inputStream = gridFsResource.getInputStream()){
+                byte[] buffer = new byte[8192];
+                int bytesRead;
+                while((bytesRead = inputStream.read(buffer)) != -1){
+                    outputStream.write(buffer,0,bytesRead);
+                }
+                outputStream.flush();
+                statusRepository.save(new DownloadStatus(fileId,"COMPLETED"));
+            } catch (IOException e) {
+                statusRepository.save(new DownloadStatus(fileId,"FAILED"));
+                throw new RuntimeException("Download Failed!");
+            }
+        };
+        Long contentLength = gridFsResource.contentLength();
+        String contentType = gridFsResource.getContentType();
+        String disposition = String.format("attachment; filename=\"%s\"",gridFsResource.getFilename());
+
+        return ResponseEntity.ok()
+                .contentType(MediaType.parseMediaType(contentType))
+                .contentLength(contentLength)
+                .header(HttpHeaders.CONTENT_DISPOSITION,disposition)
+                .body(responseBody);
+
     }
 
 }
