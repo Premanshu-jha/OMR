@@ -44,8 +44,11 @@ public class FileService {
     }
     public String uploadOmrFile(MultipartFile file) throws IOException {
         String originalFileName = file.getOriginalFilename();
-        Query query = new Query(Criteria.where("filename").is(originalFileName));
-        gridFsTemplate.delete(query);
+        GridFSFile existingFile = gridFsTemplate.findOne(
+                new Query(Criteria.where("filename").is(originalFileName)));
+        if(existingFile != null) {
+            deleteFile(existingFile.getObjectId().toString());
+        }
         OmrFile metaData = new OmrFile(originalFileName,file.getContentType(),file.getSize(),Instant.now());
 
         ObjectId fileId = gridFsTemplate.store(file.getInputStream(),
