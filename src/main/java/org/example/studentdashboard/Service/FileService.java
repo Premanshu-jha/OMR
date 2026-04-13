@@ -2,9 +2,11 @@ package org.example.studentdashboard.Service;
 import com.mongodb.client.gridfs.model.GridFSFile;
 import org.bson.types.ObjectId;
 import org.example.studentdashboard.Models.DownloadStatus;
+import org.example.studentdashboard.Models.FileResponse;
 import org.example.studentdashboard.Models.OmrFile;
 import org.example.studentdashboard.Repositories.DownloadStatusRepository;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Sort;
 import org.springframework.data.mongodb.core.query.Criteria;
 import org.springframework.data.mongodb.core.query.Query;
 import org.springframework.data.mongodb.gridfs.GridFsResource;
@@ -20,6 +22,8 @@ import org.springframework.web.servlet.mvc.method.annotation.StreamingResponseBo
 import java.io.IOException;
 import java.io.InputStream;
 import java.time.Instant;
+import java.util.ArrayList;
+import java.util.List;
 
 @Service
 public class FileService {
@@ -35,6 +39,19 @@ public class FileService {
         if(gridFSFile == null) throw new RuntimeException("File not found for the given id");
         return gridFSFile;
     }
+
+    public List<FileResponse> getAllFileLabels(){
+        List<FileResponse> list = new ArrayList<>();
+        Query query = new Query().with(Sort.by(Sort.Direction.DESC,"uploadDate"));
+        gridFsTemplate.find(query).forEach(file -> {
+            double bytes = file.getLength();
+            double mb = bytes/(1024 * 1024);
+            mb = Math.round(mb*100.0)/100.0;
+            list.add(new FileResponse(file.getObjectId().toHexString(),file.getFilename(),mb,file.getUploadDate().toString()));
+        });
+        return list;
+    }
+
 
     public void deleteFile(String fileId) {
         ObjectId objId = new ObjectId(fileId);
