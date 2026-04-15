@@ -1,9 +1,13 @@
 package org.example.studentdashboard.Service;
+import com.mongodb.client.gridfs.GridFSFindIterable;
 import com.mongodb.client.gridfs.model.GridFSFile;
+import com.opencsv.bean.CsvToBean;
+import com.opencsv.bean.CsvToBeanBuilder;
 import org.bson.types.ObjectId;
 import org.example.studentdashboard.Models.DownloadStatus;
 import org.example.studentdashboard.Models.FileResponse;
 import org.example.studentdashboard.Models.OmrFile;
+import org.example.studentdashboard.Models.StudentData;
 import org.example.studentdashboard.Repositories.DownloadStatusRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Sort;
@@ -19,8 +23,7 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.servlet.mvc.method.annotation.StreamingResponseBody;
 
-import java.io.IOException;
-import java.io.InputStream;
+import java.io.*;
 import java.time.Instant;
 import java.util.ArrayList;
 import java.util.List;
@@ -109,5 +112,42 @@ public class FileService {
                 .body(responseBody);
 
     }
+
+    public List<StudentData> processCsvFile(InputStream inputStream){
+
+        try(Reader reader = new BufferedReader(new InputStreamReader(inputStream))){
+
+            CsvToBean<StudentData> csvToBean = new CsvToBeanBuilder<StudentData>(reader)
+                    .withType(StudentData.class)
+                    .withIgnoreLeadingWhiteSpace(true)
+                    .build();
+
+            List<StudentData> list = new ArrayList<>();
+            for(StudentData studentData:csvToBean){
+                String id = studentData.getStudentId();
+                if(id == null || id.matches("[0-9]+")) list.add(studentData);
+                else break;
+            }
+           return list;
+        }
+         catch (Exception e){
+             throw new RuntimeException("Error in processing csv file!");
+         }
+    }
+
+
+    public List<StudentData> getExamResults() throws IOException {
+         Query query = new Query().with(Sort.by(Sort.Direction.DESC,"uploadDate"));
+        GridFSFindIterable iterable = gridFsTemplate.find(query);
+        for(GridFSFile file:iterable){
+            if(file.getFilename().contains("exam_results")){
+                GridFsResource gridFsResource = gridFsTemplate.getResource(file);
+                return processCsvFile(gridFsResource.getInputStream());
+            }
+        }
+
+        return new ArrayList<>();
+    }
+
 
 }
