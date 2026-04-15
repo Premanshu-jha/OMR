@@ -2,6 +2,7 @@ package org.example.studentdashboard.Controller;
 import com.mongodb.client.gridfs.model.GridFSFile;
 import org.example.studentdashboard.Models.DownloadStatus;
 import org.example.studentdashboard.Models.FileResponse;
+import org.example.studentdashboard.Models.StudentData;
 import org.example.studentdashboard.Service.FileService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
@@ -43,6 +44,11 @@ public class FileController {
     @GetMapping("download/status/{id}")
     public DownloadStatus getDownloadStatus(@PathVariable String id){
          return fileService.getDownloadStatus(id);
+    }
+
+    @GetMapping("/exam-results")
+    public List<StudentData> getExamResults() throws IOException {
+         return fileService.getExamResults();
     }
 
 }

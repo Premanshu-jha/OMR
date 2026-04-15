@@ -51,7 +51,7 @@ public class StudentData {
     @CsvBindByName(column = "PHYSICS -- Avg Time on each Question")
     private String physicsAvgTimeEachQuestion;
 
-    @CsvBindByPosition(position = 15)
+    @CsvBindByName(column = "PHYSICS — RANK")
     private Integer physicsRank;
 
     @CsvBindByName(column = "MATHS -- Total Questions")
@@ -81,7 +81,7 @@ public class StudentData {
     @CsvBindByName(column = "MATHS -- Avg Time on each Question")
     private String mathsAvgTimeEachQuestion;
 
-    @CsvBindByPosition(position = 25)
+    @CsvBindByName(column = "MATHS – RANK")
     private Integer mathsRank;
 
     @CsvBindByName(column = "CHEMISTRY -- Total Questions")
@@ -111,7 +111,7 @@ public class StudentData {
     @CsvBindByName(column = "CHEMISTRY -- Avg Time on each Question")
     private String chemistryAvgTimeEachQuestion;
 
-    @CsvBindByPosition(position = 35)
+    @CsvBindByName(column = "CHEMISTRY – RANK")
     private Integer chemistryRank;
 
     @CsvBindByName(column = "TOTAL -- Total Questions")
@@ -141,7 +141,7 @@ public class StudentData {
     @CsvBindByName(column = "TOTAL -- Avg Time on each Question")
     private String avgTimeEachQuestion;
 
-    @CsvBindByPosition(position = 45)
+    @CsvBindByName(column = "RANK")
     private Integer rank;
 
     @CsvBindByName(column = "TIME OUTSIDE")
