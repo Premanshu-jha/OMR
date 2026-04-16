@@ -132,7 +132,7 @@ public class StudentData {
     @CsvBindByName(column = "TOTAL -- Negative Marks")
     private Integer totalNegativeMarks;
 
-    @CsvBindByName(column = "TOTAL -- 198 Total Marks")
+    @CsvBindByName(column = "TOTAL")
     private Integer totalMarks;
 
     @CsvBindByName(column = "TOTAL -- Total Time Spent")
