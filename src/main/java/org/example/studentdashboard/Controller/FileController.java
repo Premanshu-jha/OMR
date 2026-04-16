@@ -1,6 +1,7 @@
 package org.example.studentdashboard.Controller;
 import com.mongodb.client.gridfs.model.GridFSFile;
 import org.example.studentdashboard.Models.DownloadStatus;
+import org.example.studentdashboard.Models.ExamResults;
 import org.example.studentdashboard.Models.FileResponse;
 import org.example.studentdashboard.Models.StudentData;
 import org.example.studentdashboard.Service.FileService;
@@ -47,7 +48,7 @@ public class FileController {
     }
 
     @GetMapping("/exam-results")
-    public List<StudentData> getExamResults() throws IOException {
+    public ExamResults getExamResults() throws IOException {
          return fileService.getExamResults();
     }
 

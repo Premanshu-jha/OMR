@@ -4,10 +4,7 @@ import com.mongodb.client.gridfs.model.GridFSFile;
 import com.opencsv.bean.CsvToBean;
 import com.opencsv.bean.CsvToBeanBuilder;
 import org.bson.types.ObjectId;
-import org.example.studentdashboard.Models.DownloadStatus;
-import org.example.studentdashboard.Models.FileResponse;
-import org.example.studentdashboard.Models.OmrFile;
-import org.example.studentdashboard.Models.StudentData;
+import org.example.studentdashboard.Models.*;
 import org.example.studentdashboard.Repositories.DownloadStatusRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Sort;
@@ -135,19 +132,30 @@ public class FileService {
          }
     }
 
-
-    public List<StudentData> getExamResults() throws IOException {
-         Query query = new Query().with(Sort.by(Sort.Direction.DESC,"uploadDate"));
+    public GridFSFile getExamResultFile(){
+        Query query = new Query().with(Sort.by(Sort.Direction.DESC,"uploadDate"));
         GridFSFindIterable iterable = gridFsTemplate.find(query);
-        for(GridFSFile file:iterable){
-            if(file.getFilename().contains("exam_results")){
-                GridFsResource gridFsResource = gridFsTemplate.getResource(file);
-                return processCsvFile(gridFsResource.getInputStream());
+        for(GridFSFile file:iterable) {
+            if (file.getFilename().contains("exam_results")) {
+                return file;
             }
         }
-
-        return new ArrayList<>();
+        throw new RuntimeException("No file with exam_results name found!");
     }
 
+    public String getExamIdentifier(String fileName){
+        return fileName.replace("exam_results_","").replace(".csv","")
+                .replaceAll("\\s?\\(\\d+\\)","").trim();
+    }
+
+
+    public ExamResults getExamResults() throws IOException {
+                GridFSFile examFile = getExamResultFile();
+                GridFsResource gridFsResource = gridFsTemplate.getResource(examFile);
+                ExamResults examResults = new ExamResults();
+                examResults.setStudentData(processCsvFile(gridFsResource.getInputStream()));
+                examResults.setExamId(getExamIdentifier(examFile.getFilename()));
+                return examResults;
+        }
 
 }
