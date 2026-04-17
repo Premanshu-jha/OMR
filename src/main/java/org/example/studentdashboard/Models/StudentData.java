@@ -42,8 +42,11 @@ public class StudentData {
     @CsvBindByName(column = "PHYSICS -- Negative Marks")
     private Integer physicsNegativeMarks;
 
-    @CsvBindByName(column = "PHYSICS -- 66 Total Marks")
+    @CsvBindByName(column = "PHYSICS – Total Marks")
     private Integer physicsTotalMarks;
+
+    @CsvBindByName(column = "PHYSICS – Marks Scored")
+    private Integer physicsMarksScored;
 
     @CsvBindByName(column = "PHYSICS -- Total Time Spent")
     private String physicsTotalTimeSpent;
@@ -72,8 +75,11 @@ public class StudentData {
     @CsvBindByName(column = "MATHS -- Negative Marks")
     private Integer mathsNegativeMarks;
 
-    @CsvBindByName(column = "MATHS -- 66 Total Marks")
+    @CsvBindByName(column = "MATHS -- Total Marks")
     private Integer mathsTotalMarks;
+
+    @CsvBindByName(column = "MATHS – Marks Scored")
+    private Integer mathsMarksScored;
 
     @CsvBindByName(column = "MATHS -- Total Time Spent")
     private String mathsTotalTimeSpent;
@@ -102,8 +108,11 @@ public class StudentData {
     @CsvBindByName(column = "CHEMISTRY -- Negative Marks")
     private Integer chemistryNegativeMarks;
 
-    @CsvBindByName(column = "CHEMISTRY -- 66 Total Marks")
+    @CsvBindByName(column = "CHEMISTRY – Total Marks")
     private Integer chemistryTotalMarks;
+
+    @CsvBindByName(column = "CHEMISTRY – Marks Scored")
+    private Integer chemistryMarksScored;
 
     @CsvBindByName(column = "CHEMISTRY -- Total Time Spent")
     private String chemistryTotalTimeSpent;
