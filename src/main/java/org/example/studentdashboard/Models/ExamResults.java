@@ -10,5 +10,19 @@ import java.util.List;
 public class ExamResults {
 
     private String examId;
+    private Integer totalStudentsAttempted;
+
+    private Integer physicsTotalMarks;
+    private Integer physicsTotalQuestions;
+
+    private Integer mathsTotalMarks;
+    private Integer mathsTotalQuestions;
+
+    private Integer chemistryTotalMarks;
+    private Integer chemistryTotalQuestions;
+
+    private Integer examTotalMarks;
+    private Integer examTotalQuestions;
+
     private List<StudentData> studentData;
 }

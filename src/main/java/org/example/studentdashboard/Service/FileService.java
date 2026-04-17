@@ -152,10 +152,35 @@ public class FileService {
     public ExamResults getExamResults() throws IOException {
                 GridFSFile examFile = getExamResultFile();
                 GridFsResource gridFsResource = gridFsTemplate.getResource(examFile);
-                ExamResults examResults = new ExamResults();
-                examResults.setStudentData(processCsvFile(gridFsResource.getInputStream()));
-                examResults.setExamId(getExamIdentifier(examFile.getFilename()));
-                return examResults;
+                List<StudentData> list = processCsvFile(gridFsResource.getInputStream());
+                if(list.size() > 0) {
+                    ExamResults examResults = new ExamResults();
+                    examResults.setStudentData(list);
+                    examResults.setExamId(getExamIdentifier(examFile.getFilename()));
+
+                    Integer physicsTotalMarks = list.get(0).getPhysicsTotalMarks();
+                    Integer physicsTotalQuestions = list.get(0).getPhysicsTotalQuestions();
+
+                    Integer mathsTotalMarks = list.get(0).getMathsTotalMarks();
+                    Integer mathsTotalQuestions = list.get(0).getMathsTotalQuestions();
+
+                    Integer chemistryTotalMarks = list.get(0).getChemistryTotalMarks();
+                    Integer chemistryTotalQuestions = list.get(0).getChemistryTotalQuestions();
+
+                    examResults.setPhysicsTotalMarks(physicsTotalMarks);
+                    examResults.setMathsTotalMarks(mathsTotalMarks);
+                    examResults.setChemistryTotalMarks(chemistryTotalMarks);
+                    examResults.setExamTotalMarks(physicsTotalMarks + mathsTotalMarks + chemistryTotalMarks);
+
+                    examResults.setPhysicsTotalQuestions(physicsTotalQuestions);
+                    examResults.setMathsTotalQuestions(mathsTotalQuestions);
+                    examResults.setChemistryTotalQuestions(chemistryTotalQuestions);
+                    examResults.setExamTotalQuestions(physicsTotalQuestions + mathsTotalQuestions + chemistryTotalQuestions);
+
+                    examResults.setTotalStudentsAttempted(list.size());
+                    return examResults;
+                }
+                else throw new RuntimeException("No students available!");
         }
 
 }
