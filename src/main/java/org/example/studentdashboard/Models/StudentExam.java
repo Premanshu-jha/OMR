@@ -8,8 +8,8 @@ import lombok.*;
 @NoArgsConstructor
 @AllArgsConstructor
 @Table(indexes = {
-        @Index(name = "studentIndex", columnList = "student_id"),
-@Index(name = "examIndex",columnList = "exam_id")
+        @Index(name = "student_index", columnList = "student_id"),
+@Index(name = "exam_index",columnList = "exam_id")
 }
 )
 @EqualsAndHashCode(onlyExplicitlyIncluded = true)

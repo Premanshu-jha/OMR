@@ -12,6 +12,9 @@ import java.util.List;
 @NoArgsConstructor
 @EqualsAndHashCode(onlyExplicitlyIncluded = true)
 @Builder
+@Table(indexes = {
+        @Index(name = "exam_index",columnList = "exam_id")
+})
 public class Exam {
 
     @Id
@@ -21,7 +24,7 @@ public class Exam {
     @EqualsAndHashCode.Include
     private Long id;
 
-    @Column(unique = true,nullable = false)
+    @Column(name = "exam_id", unique = true,nullable = false)
     private String examId;
 
     private Integer examTotalMarks;

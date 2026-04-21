@@ -3,9 +3,15 @@ import com.mongodb.client.gridfs.GridFSFindIterable;
 import com.mongodb.client.gridfs.model.GridFSFile;
 import com.opencsv.bean.CsvToBean;
 import com.opencsv.bean.CsvToBeanBuilder;
+import jakarta.persistence.EntityManager;
+import jakarta.persistence.PersistenceContext;
+import jakarta.transaction.Transactional;
 import org.bson.types.ObjectId;
 import org.example.studentdashboard.Models.*;
 import org.example.studentdashboard.Repositories.DownloadStatusRepository;
+import org.example.studentdashboard.Repositories.ExamRepository;
+import org.example.studentdashboard.Repositories.StudentExamRepository;
+import org.example.studentdashboard.Repositories.StudentRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.mongodb.core.query.Criteria;
@@ -22,8 +28,7 @@ import org.springframework.web.servlet.mvc.method.annotation.StreamingResponseBo
 
 import java.io.*;
 import java.time.Instant;
-import java.util.ArrayList;
-import java.util.List;
+import java.util.*;
 
 @Service
 public class FileService {
@@ -32,6 +37,18 @@ public class FileService {
 
     @Autowired
     DownloadStatusRepository statusRepository;
+
+    @Autowired
+    StudentRepository studentRepository;
+
+    @Autowired
+    ExamRepository examRepository;
+
+    @Autowired
+    StudentExamRepository studentExamRepository;
+
+    @PersistenceContext
+    EntityManager entityManager;
 
 
     public GridFSFile getFileLabel(String fileId){
@@ -182,5 +199,46 @@ public class FileService {
                 }
                 else throw new RuntimeException("No students available!");
         }
+
+    @Transactional
+    public void bulkPushFileData() throws IOException {
+        Map<String,Long> studentMap = new HashMap<>();
+        studentRepository.findAll().forEach(student -> {
+            String rollNo = student.getStudentId();
+            if(!studentMap.containsKey(rollNo))
+                 studentMap.put(rollNo,student.getId());
+        });
+
+        ExamResults examResults = getExamResults();
+        Optional<Exam> optionalExam = examRepository.findByExamId(examResults.getExamId());
+        if(optionalExam.isPresent()) throw new RuntimeException("Records allready present for this exam!");
+        else{
+            Exam exam = Exam.builder()
+                    .examId(examResults.getExamId())
+                    .examTotalMarks(examResults.getExamTotalMarks())
+                    .physicsTotalMarks(examResults.getPhysicsTotalMarks())
+                    .mathsTotalMarks(examResults.getMathsTotalMarks())
+                    .chemistryTotalMarks(examResults.getChemistryTotalMarks())
+                    .totalStudentsAttempted(examResults.getTotalStudentsAttempted())
+                    .build();
+            StudentExam studentExam = new StudentExam();
+            studentExam.setExam(examRepository.save(exam));
+
+            List<StudentData> studentRecords = examResults.getStudentData();
+            for(int i = 0;i < studentRecords.size();i++){
+                String rollNo = studentRecords.get(i).getStudentId();
+                if(studentMap.containsKey(rollNo)){
+                    Student student = Student.builder().id(studentMap.get(rollNo)).build();
+                    studentExam.setStudent(student);
+                }
+                else{
+
+                }
+            }
+
+        }
+
+    }
+
 
 }
