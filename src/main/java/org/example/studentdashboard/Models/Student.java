@@ -12,6 +12,9 @@ import java.util.List;
 @NoArgsConstructor
 @EqualsAndHashCode(onlyExplicitlyIncluded = true)
 @Builder
+@Table(indexes = {
+        @Index(name = "roll_index",columnList = "roll_no")
+})
 public class Student {
     @Id
     @GeneratedValue(strategy = GenerationType.SEQUENCE,generator = "studentSequenceGenerator")
@@ -20,8 +23,8 @@ public class Student {
     @EqualsAndHashCode.Include
     private Long id;
 
-    @Column(unique = true,nullable = false)
-    private String studentId;
+    @Column(name = "roll_no",unique = true,nullable = false)
+    private String rollNo;
 
     private String name;
 

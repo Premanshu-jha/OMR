@@ -13,7 +13,7 @@ import java.util.List;
 @EqualsAndHashCode(onlyExplicitlyIncluded = true)
 @Builder
 @Table(indexes = {
-        @Index(name = "exam_index",columnList = "exam_id")
+        @Index(name = "exam_identifier_index",columnList = "exam_identifier")
 })
 public class Exam {
 
@@ -24,8 +24,8 @@ public class Exam {
     @EqualsAndHashCode.Include
     private Long id;
 
-    @Column(name = "exam_id", unique = true,nullable = false)
-    private String examId;
+    @Column(name = "exam_identifier", unique = true,nullable = false)
+    private String examIdentifier;
 
     private Integer examTotalMarks;
 

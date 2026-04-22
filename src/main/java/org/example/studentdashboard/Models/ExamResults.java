@@ -9,7 +9,7 @@ import java.util.List;
 @NoArgsConstructor
 public class ExamResults {
 
-    private String examId;
+    private String examIdentifier;
     private Integer totalStudentsAttempted;
 
     private Integer physicsTotalMarks;
