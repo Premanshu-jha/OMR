@@ -138,8 +138,8 @@ public class FileService {
 
             List<StudentData> list = new ArrayList<>();
             for(StudentData studentData:csvToBean){
-                String id = studentData.getStudentId();
-                if(id == null || id.matches("[0-9]+")) list.add(studentData);
+                String id = studentData.getRollNo();
+                if(id.matches("[0-9]+")) list.add(studentData);
                 else break;
             }
            return list;
@@ -173,7 +173,7 @@ public class FileService {
                 if(list.size() > 0) {
                     ExamResults examResults = new ExamResults();
                     examResults.setStudentData(list);
-                    examResults.setExamId(getExamIdentifier(examFile.getFilename()));
+                    examResults.setExamIdentifier(getExamIdentifier(examFile.getFilename()));
 
                     Integer physicsTotalMarks = list.get(0).getPhysicsTotalMarks();
                     Integer physicsTotalQuestions = list.get(0).getPhysicsTotalQuestions();
@@ -204,38 +204,98 @@ public class FileService {
     public void bulkPushFileData() throws IOException {
         Map<String,Long> studentMap = new HashMap<>();
         studentRepository.findAll().forEach(student -> {
-            String rollNo = student.getStudentId();
+            String rollNo = student.getRollNo();
             if(!studentMap.containsKey(rollNo))
                  studentMap.put(rollNo,student.getId());
         });
 
         ExamResults examResults = getExamResults();
-        Optional<Exam> optionalExam = examRepository.findByExamId(examResults.getExamId());
+        Optional<Exam> optionalExam = examRepository.findByExamIdentifier(examResults.getExamIdentifier());
         if(optionalExam.isPresent()) throw new RuntimeException("Records allready present for this exam!");
         else{
             Exam exam = Exam.builder()
-                    .examId(examResults.getExamId())
+                    .examIdentifier(examResults.getExamIdentifier())
                     .examTotalMarks(examResults.getExamTotalMarks())
                     .physicsTotalMarks(examResults.getPhysicsTotalMarks())
                     .mathsTotalMarks(examResults.getMathsTotalMarks())
                     .chemistryTotalMarks(examResults.getChemistryTotalMarks())
                     .totalStudentsAttempted(examResults.getTotalStudentsAttempted())
                     .build();
-            StudentExam studentExam = new StudentExam();
-            studentExam.setExam(examRepository.save(exam));
-
+            Long examId = examRepository.save(exam).getId();
             List<StudentData> studentRecords = examResults.getStudentData();
-            for(int i = 0;i < studentRecords.size();i++){
-                String rollNo = studentRecords.get(i).getStudentId();
-                if(studentMap.containsKey(rollNo)){
-                    Student student = Student.builder().id(studentMap.get(rollNo)).build();
-                    studentExam.setStudent(student);
-                }
-                else{
+            for (int i = 0; i < studentRecords.size(); i++) {
+                StudentData data = studentRecords.get(i);
+                String rollNo = data.getRollNo();
 
+                Student student = new Student();
+                if (studentMap.containsKey(rollNo)) {
+                    student.setId(studentMap.get(rollNo));
+                }
+                student.setRollNo(rollNo);
+                student.setCity(data.getCity());
+                student.setName(data.getName());
+                student.setPhone(data.getPhone());
+                student.setClassNum(data.getClassNum());
+                Student savedStudent = studentRepository.save(student);
+
+
+                StudentExam studentExam = StudentExam.builder()
+                        .exam(Exam.builder().id(examId).build())
+                        .student(savedStudent)
+                        // Physics
+                        .physicsAttemptedQuestions(data.getPhysicsAttemptedQuestions())
+                        .physicsCorrectAnswers(data.getPhysicsCorrectAnswers())
+                        .physicsWrongAnswers(data.getPhysicsWrongAnswers())
+                        .physicsPositiveMarks(data.getPhysicsPositiveMarks())
+                        .physicsNegativeMarks(data.getPhysicsNegativeMarks())
+                        .physicsMarksScored(data.getPhysicsMarksScored())
+                        .physicsTotalTimeSpent(data.getPhysicsTotalTimeSpent())
+                        .physicsAvgTimeEachQuestion(data.getPhysicsAvgTimeEachQuestion())
+                        .physicsRank(data.getPhysicsRank())
+                        // Maths
+                        .mathsAttemptedQuestions(data.getMathsAttemptedQuestions())
+                        .mathsCorrectAnswers(data.getMathsCorrectAnswers())
+                        .mathsWrongAnswers(data.getMathsWrongAnswers())
+                        .mathsPositiveMarks(data.getMathsPositiveMarks())
+                        .mathsNegativeMarks(data.getMathsNegativeMarks())
+                        .mathsMarksScored(data.getMathsMarksScored())
+                        .mathsTotalTimeSpent(data.getMathsTotalTimeSpent())
+                        .mathsAvgTimeEachQuestion(data.getMathsAvgTimeEachQuestion())
+                        .mathsRank(data.getMathsRank())
+                        // Chemistry
+                        .chemistryAttemptedQuestions(data.getChemistryAttemptedQuestions())
+                        .chemistryCorrectAnswers(data.getChemistryCorrectAnswers())
+                        .chemistryWrongAnswers(data.getChemistryWrongAnswers())
+                        .chemistryPositiveMarks(data.getChemistryPositiveMarks())
+                        .chemistryNegativeMarks(data.getChemistryNegativeMarks())
+                        .chemistryMarksScored(data.getChemistryMarksScored())
+                        .chemistryTotalTimeSpent(data.getChemistryTotalTimeSpent())
+                        .chemistryAvgTimeEachQuestion(data.getChemistryAvgTimeEachQuestion())
+                        .chemistryRank(data.getChemistryRank())
+                        // Overall
+                        .totalAttemptedQuestions(data.getTotalAttemptedQuestions())
+                        .totalCorrectAnswers(data.getTotalCorrectAnswers())
+                        .totalWrongAnswers(data.getTotalWrongAnswers())
+                        .totalPositiveMarks(data.getTotalPositiveMarks())
+                        .totalNegativeMarks(data.getTotalNegativeMarks())
+                        .totalMarks(data.getTotalMarks())
+                        .totalTimeSpent(data.getTotalTimeSpent())
+                        .avgTimeEachQuestion(data.getAvgTimeEachQuestion())
+                        .rank(data.getRank())
+                        .timeOutside(data.getTimeOutside())
+                        .examStartTime(data.getExamStartTime())
+                        .examEndTime(data.getExamEndTime())
+                        .build();
+
+                studentExamRepository.save(studentExam);
+
+                // 3. The Batch Flush/Clear logic
+                if (i > 0 && i % 100 == 0) {
+                    entityManager.flush();
+                    entityManager.clear();
                 }
             }
-
+            entityManager.flush();
         }
 
     }

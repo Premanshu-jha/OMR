@@ -7,5 +7,5 @@ import java.util.Optional;
 
 public interface ExamRepository extends JpaRepository<Exam,Long> {
 
-    public Optional<Exam> findByExamId(String examId);
+    public Optional<Exam> findByExamIdentifier(String examIdentifier);
 }

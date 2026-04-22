@@ -52,4 +52,10 @@ public class FileController {
          return fileService.getExamResults();
     }
 
+    @PostMapping("/bulk-update")
+    public ResponseEntity<String> bulkUpdate() throws IOException {
+        fileService.bulkPushFileData();
+        return ResponseEntity.ok("File records pushed succesfully!");
+    }
+
 }

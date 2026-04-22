@@ -7,7 +7,7 @@ import lombok.Data;
 public class StudentData {
 
     @CsvBindByName(column = "# ID NO")
-    private String studentId;
+    private String rollNo;
 
     @CsvBindByName(column = "STUDENT NAME")
     private String name;
@@ -55,7 +55,7 @@ public class StudentData {
     private String physicsAvgTimeEachQuestion;
 
     @CsvBindByName(column = "PHYSICS — RANK")
-    private Integer physicsRank;
+    private Long physicsRank;
 
     @CsvBindByName(column = "MATHS -- Total Questions")
     private Integer mathsTotalQuestions;
@@ -88,7 +88,7 @@ public class StudentData {
     private String mathsAvgTimeEachQuestion;
 
     @CsvBindByName(column = "MATHS – RANK")
-    private Integer mathsRank;
+    private Long mathsRank;
 
     @CsvBindByName(column = "CHEMISTRY -- Total Questions")
     private Integer chemistryTotalQuestions;
@@ -121,7 +121,7 @@ public class StudentData {
     private String chemistryAvgTimeEachQuestion;
 
     @CsvBindByName(column = "CHEMISTRY – RANK")
-    private Integer chemistryRank;
+    private Long chemistryRank;
 
     @CsvBindByName(column = "TOTAL -- Total Questions")
     private Integer totalQuestions;
@@ -151,7 +151,7 @@ public class StudentData {
     private String avgTimeEachQuestion;
 
     @CsvBindByName(column = "RANK")
-    private Integer rank;
+    private Long rank;
 
     @CsvBindByName(column = "TIME OUTSIDE")
     private String timeOutside;
