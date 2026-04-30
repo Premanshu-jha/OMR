@@ -1,5 +1,6 @@
 package org.example.studentdashboard.Service;
 
+import org.example.studentdashboard.Models.ChatResponse;
 import org.springframework.ai.chat.client.ChatClient;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
@@ -14,7 +15,7 @@ public class ChatService {
 
     private final ChatClient anthropicClient;
 
-    private final String systemPrompt = "As an expert in cricket!";
+    private final String systemPrompt = "U r a java expert!";
 
     public ChatService(@Qualifier("openAiChatClient") ChatClient openAiClient,
                        @Qualifier("anthropicChatClient") ChatClient anthropicClient){
@@ -22,11 +23,11 @@ public class ChatService {
         this.anthropicClient = anthropicClient;
     }
 
-    private String useClient(ChatClient client,String msg){
-         return client.prompt().user(msg).system(systemPrompt).call().content();
+    private ChatResponse useClient(ChatClient client,String msg){
+         return client.prompt().user(msg).system(systemPrompt).call().entity(ChatResponse.class);
     }
 
-    public String chat(String model, String q){
+    public ChatResponse chat(String model, String q){
         if(model.equals("claude"))
             return useClient(anthropicClient,q);
         else if(model.equals("chatGpt"))
