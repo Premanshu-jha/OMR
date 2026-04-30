@@ -22,13 +22,12 @@ public class ChatService {
         this.anthropicClient = anthropicClient;
     }
 
-    private List<ChatResponse> useClient(ChatClient client, String msg){
+    private ChatResponse useClient(ChatClient client, String msg){
          return client.prompt().user(msg).system(systemPrompt).call()
-                 .entity(new ParameterizedTypeReference<List<ChatResponse>>() {
-                 });
+                 .entity(ChatResponse.class);
     }
 
-    public List<ChatResponse> chat(String model, String q){
+    public ChatResponse chat(String model, String q){
         if(model.equals("claude"))
             return useClient(anthropicClient,q);
         else if(model.equals("chatGpt"))
