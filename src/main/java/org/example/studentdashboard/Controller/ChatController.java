@@ -1,24 +1,33 @@
 package org.example.studentdashboard.Controller;
 
 import org.springframework.ai.chat.client.ChatClient;
+import org.springframework.ai.chat.model.ChatModel;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestParam;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 @RestController
 @RequestMapping
 public class ChatController {
 
-    private ChatClient chatClient;
+    @Autowired
+    @Qualifier("openAiChatClient")
+    private ChatClient openAiClient;
 
-    public ChatController(ChatClient.Builder builder){
-        this.chatClient = builder.build();
-    }
-    @GetMapping("/chat")
-    public ResponseEntity<String> chat(@RequestParam(required = true,value = "q") String q){
-         return ResponseEntity.ok(chatClient.prompt(q).call().content());
+    @Autowired
+    @Qualifier("anthropicChatClient")
+    private ChatClient anthropicClient;
+
+
+    @GetMapping("/{model}/chat")
+    public ResponseEntity<String> chat(@PathVariable String model, @RequestParam(required = true,value = "q") String q){
+         if(model.equals("claude"))
+          return ResponseEntity.ok(anthropicClient.prompt(q).call().content());
+         else if(model.equals("chatGpt"))
+             return ResponseEntity.ok(openAiClient.prompt(q).call().content());
+         throw new RuntimeException("This model isnt integrated");
+
     }
 
 }
