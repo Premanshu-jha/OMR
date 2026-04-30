@@ -5,8 +5,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
-import java.util.List;
-
 @RestController
 @RequestMapping
 public class ChatController {
@@ -15,7 +13,7 @@ public class ChatController {
     ChatService chatService;
 
     @GetMapping("/{model}/chat")
-    public ResponseEntity<List<ChatResponse>> chat(@PathVariable String model, @RequestParam(required = true,value = "q") String q){
+    public ResponseEntity<ChatResponse> chat(@PathVariable String model, @RequestParam(required = true,value = "q") String q){
         return ResponseEntity.ok(chatService.chat(model,q));
     }
 
