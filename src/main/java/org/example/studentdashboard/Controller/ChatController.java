@@ -19,8 +19,8 @@ public class ChatController {
         return ResponseEntity.ok(chatService.chat(model,q));
     }
 
-    @GetMapping(value = "/{model}/stream-chat",produces = MediaType.TEXT_EVENT_STREAM_VALUE)
-    public ResponseEntity<Flux<String>> streamChat(@PathVariable String model, @RequestParam(required = true,value = "q") String q,@RequestHeader String userId){
+    @GetMapping(value = "/{model}/{userId}/stream-chat",produces = MediaType.TEXT_EVENT_STREAM_VALUE)
+    public ResponseEntity<Flux<String>> streamChat(@PathVariable String model, @RequestParam(required = true,value = "q") String q,@PathVariable String userId){
         return ResponseEntity.ok(chatService.streamChat(model,q,userId));
     }
 
