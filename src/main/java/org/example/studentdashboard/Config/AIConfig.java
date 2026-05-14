@@ -43,8 +43,7 @@ public class AIConfig {
                 .queryAugmenter(ContextualQueryAugmenter.builder().allowEmptyContext(true).build())
                 .build();
 
-       ChatClient queryTransformer = ChatClient.builder(claudeModel).build();
-        GlobalRewriteAdvisor globalRewriteAdvisor = new GlobalRewriteAdvisor(queryTransformer);
+        GlobalRewriteAdvisor globalRewriteAdvisor = new GlobalRewriteAdvisor(chatModel);
         return ChatClient.builder(chatModel).defaultAdvisors(messageChatMemoryAdvisor,globalRewriteAdvisor,vectorChatMemoryAdvisor,ragAdvisor).build();
     }
 
@@ -62,8 +61,7 @@ public class AIConfig {
                 .queryAugmenter(ContextualQueryAugmenter.builder().allowEmptyContext(true).build())
                 .build();
 
-        ChatClient queryTransformer = ChatClient.builder(chatGptModel).build();
-        GlobalRewriteAdvisor globalRewriteAdvisor = new GlobalRewriteAdvisor(queryTransformer);
+        GlobalRewriteAdvisor globalRewriteAdvisor = new GlobalRewriteAdvisor(chatModel);
         return ChatClient.builder(chatModel).defaultAdvisors(messageChatMemoryAdvisor,globalRewriteAdvisor,vectorChatMemoryAdvisor,ragAdvisor).build();
     }
 }
