@@ -1,4 +1,5 @@
 CREATE TABLE IF NOT EXISTS spring_ai_chat_memory (
+    id SERIAL PRIMARY KEY,
     conversation_id VARCHAR(255) NOT NULL,
     content TEXT NOT NULL,
     type VARCHAR(20) NOT NULL CHECK (type IN ('USER', 'ASSISTANT', 'SYSTEM', 'TOOL')),
