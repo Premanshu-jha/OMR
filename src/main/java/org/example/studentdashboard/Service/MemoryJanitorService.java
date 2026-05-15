@@ -1,5 +1,6 @@
 package org.example.studentdashboard.Service;
 
+import org.springframework.ai.openai.OpenAiChatModel;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.ai.chat.client.ChatClient;
 import org.springframework.ai.chat.model.ChatModel;
@@ -15,7 +16,7 @@ public class MemoryJanitorService {
     private ChatClient chatClient;
     private JdbcTemplate jdbcTemplate;
 
-    public MemoryJanitorService(ChatModel chatModel, JdbcTemplate jdbcTemplate){
+    public MemoryJanitorService(OpenAiChatModel chatModel, JdbcTemplate jdbcTemplate){
          this.chatClient = ChatClient.builder(chatModel).build();
          this.jdbcTemplate = jdbcTemplate;
     }
