@@ -2,6 +2,7 @@ package org.example.studentdashboard.Service;
 import org.example.studentdashboard.Models.ChatResponse;
 import org.springframework.ai.chat.client.ChatClient;
 import org.springframework.ai.chat.memory.ChatMemory;
+import org.springframework.ai.openai.OpenAiChatModel;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Service;
 import reactor.core.publisher.Flux;
@@ -13,12 +14,15 @@ public class ChatService {
 
     private final ChatClient anthropicClient;
 
-    private final String systemPrompt = "U r a computer science expert!";
+    private final MemoryJanitorService janitorService;
+
+    private final String systemPrompt = "U r like a tutor,a personallized helper,friend and guide for student,helping the student grow and making him the better version of himself";
 
     public ChatService(@Qualifier("openAiChatClient") ChatClient openAiClient,
-                       @Qualifier("anthropicChatClient") ChatClient anthropicClient){
+                       @Qualifier("anthropicChatClient") ChatClient anthropicClient,MemoryJanitorService janitorService){
         this.openAiClient = openAiClient;
         this.anthropicClient = anthropicClient;
+        this.janitorService = janitorService;
     }
 
     private ChatResponse useClient(ChatClient client, String msg){
@@ -26,7 +30,8 @@ public class ChatService {
                  .entity(ChatResponse.class);
     }
 
-    private Flux<String> streamClient(ChatClient client,String msg,String userId){
+    private Flux<String> streamClient(ChatClient client, String msg, String userId){
+        janitorService.checkAndSummarize(userId);
         return client.prompt().user(msg).system(systemPrompt).advisors(a -> a.param(ChatMemory.CONVERSATION_ID,userId)).stream().content();
     }
 
