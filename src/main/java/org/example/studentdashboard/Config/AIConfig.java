@@ -1,6 +1,7 @@
 package org.example.studentdashboard.Config;
 
 import org.example.studentdashboard.Advisors.GlobalRewriteAdvisor;
+import org.example.studentdashboard.Tools.StudentDashBoardTools;
 import org.springframework.ai.anthropic.AnthropicChatModel;
 import org.springframework.ai.chat.client.ChatClient;
 import org.springframework.ai.chat.client.advisor.MessageChatMemoryAdvisor;
@@ -29,7 +30,8 @@ public class AIConfig {
      }
 
     @Bean(name = "openAiChatClient")
-    public ChatClient openAiChatClient(OpenAiChatModel chatModel, AnthropicChatModel claudeModel,ChatMemory chatMemory, VectorStore vectorStore){
+    public ChatClient openAiChatClient(OpenAiChatModel chatModel, AnthropicChatModel claudeModel, ChatMemory chatMemory,
+                                       VectorStore vectorStore, StudentDashBoardTools studentDashBoardTools){
         MessageChatMemoryAdvisor messageChatMemoryAdvisor = MessageChatMemoryAdvisor.builder(chatMemory).build();
 
         VectorStoreChatMemoryAdvisor vectorChatMemoryAdvisor = VectorStoreChatMemoryAdvisor.builder(vectorStore).build();
@@ -43,11 +45,15 @@ public class AIConfig {
                 .build();
 
         GlobalRewriteAdvisor globalRewriteAdvisor = new GlobalRewriteAdvisor(chatModel);
-        return ChatClient.builder(chatModel).defaultAdvisors(messageChatMemoryAdvisor,globalRewriteAdvisor,vectorChatMemoryAdvisor,ragAdvisor).build();
+        return ChatClient.builder(chatModel)
+                .defaultAdvisors(messageChatMemoryAdvisor,globalRewriteAdvisor,vectorChatMemoryAdvisor,ragAdvisor)
+                .defaultTools(studentDashBoardTools)
+                .build();
     }
 
     @Bean(name = "anthropicChatClient")
-    public ChatClient anthropicChatClient(AnthropicChatModel chatModel, OpenAiChatModel chatGptModel,ChatMemory chatMemory, VectorStore vectorStore){
+    public ChatClient anthropicChatClient(AnthropicChatModel chatModel, OpenAiChatModel chatGptModel,ChatMemory chatMemory,
+                                          VectorStore vectorStore,StudentDashBoardTools studentDashBoardTools){
         MessageChatMemoryAdvisor messageChatMemoryAdvisor = MessageChatMemoryAdvisor.builder(chatMemory).build();
 
         VectorStoreChatMemoryAdvisor vectorChatMemoryAdvisor = VectorStoreChatMemoryAdvisor.builder(vectorStore).build();
@@ -61,6 +67,9 @@ public class AIConfig {
                 .build();
 
         GlobalRewriteAdvisor globalRewriteAdvisor = new GlobalRewriteAdvisor(chatModel);
-        return ChatClient.builder(chatModel).defaultAdvisors(messageChatMemoryAdvisor,globalRewriteAdvisor,vectorChatMemoryAdvisor,ragAdvisor).build();
+        return ChatClient.builder(chatModel)
+                .defaultAdvisors(messageChatMemoryAdvisor,globalRewriteAdvisor,vectorChatMemoryAdvisor,ragAdvisor)
+                .defaultTools(studentDashBoardTools)
+                .build();
     }
 }
