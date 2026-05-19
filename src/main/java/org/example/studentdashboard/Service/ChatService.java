@@ -2,10 +2,15 @@ package org.example.studentdashboard.Service;
 import org.example.studentdashboard.Models.ChatResponse;
 import org.springframework.ai.chat.client.ChatClient;
 import org.springframework.ai.chat.memory.ChatMemory;
+import org.springframework.ai.chat.messages.Message;
 import org.springframework.ai.openai.OpenAiChatModel;
 import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.stereotype.Service;
 import reactor.core.publisher.Flux;
+
+import java.util.List;
+import java.util.Map;
 
 @Service
 public class ChatService {
@@ -16,13 +21,16 @@ public class ChatService {
 
     private final MemoryJanitorService janitorService;
 
+    private final JdbcTemplate jdbcTemplate;
+
     private final String systemPrompt = "U r like a tutor,a personallized helper,friend and guide for student,helping the student grow and making him the better version of himself";
 
     public ChatService(@Qualifier("openAiChatClient") ChatClient openAiClient,
-                       @Qualifier("anthropicChatClient") ChatClient anthropicClient,MemoryJanitorService janitorService){
+                       @Qualifier("anthropicChatClient") ChatClient anthropicClient,MemoryJanitorService janitorService,JdbcTemplate jdbcTemplate){
         this.openAiClient = openAiClient;
         this.anthropicClient = anthropicClient;
         this.janitorService = janitorService;
+        this.jdbcTemplate = jdbcTemplate;
     }
 
     private ChatResponse useClient(ChatClient client, String msg){
@@ -49,6 +57,21 @@ public class ChatService {
         else if(model.equals("chatGpt"))
             return streamClient(openAiClient,q,userId);
         throw new RuntimeException("This model isnt integrated");
+    }
+
+    public List<Map<String,Object>> getChatHistory(String userId){
+        String sql = """
+                SELECT * FROM spring_ai_chat_memory
+                WHERE conversation_id = ?
+                
+                UNION ALL
+                
+                SELECT * FROM spring_ai_chat_memory
+                WHERE conversation_id = ?
+                
+                ORDER BY timestamp ASC
+                """;
+         return jdbcTemplate.queryForList(sql,userId,userId);
     }
 
 

@@ -3,7 +3,6 @@ package org.example.studentdashboard.Service;
 import org.springframework.ai.openai.OpenAiChatModel;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.ai.chat.client.ChatClient;
-import org.springframework.ai.chat.model.ChatModel;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
@@ -48,6 +47,19 @@ public class MemoryJanitorService {
             """.formatted(historyToSummarize);
 
         String summary = this.chatClient.prompt().user(prompt).call().content();
+
+        String archiveSql = """
+                INSERT INTO chat_memory_archive (conversation_id, content, type, timestamp)
+                SELECT conversation_id, content, type, timestamp 
+                FROM spring_ai_chat_memory
+                WHERE id IN (
+                    SELECT id FROM spring_ai_chat_memory
+                    WHERE conversation_id = ?
+                    ORDER BY timestamp ASC
+                    LIMIT 20
+                )
+                """;
+        jdbcTemplate.update(archiveSql, conversationId);
 
         String deleteSql = """
                   DELETE FROM spring_ai_chat_memory
