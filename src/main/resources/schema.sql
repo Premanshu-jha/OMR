@@ -6,6 +6,14 @@ CREATE TABLE IF NOT EXISTS spring_ai_chat_memory (
     "timestamp" TIMESTAMP NOT NULL
 );
 
+CREATE TABLE IF NOT EXISTS chat_memory_archive (
+                id SERIAL PRIMARY KEY,
+                conversation_id VARCHAR(255),
+                content TEXT,
+                type VARCHAR(50),
+                timestamp TIMESTAMP
+);
+
 CREATE INDEX IF NOT EXISTS spring_ai_chat_memory_conversation_id_timestamp_idx
 ON spring_ai_chat_memory(conversation_id, "timestamp");
 
