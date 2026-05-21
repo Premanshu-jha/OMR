@@ -3,6 +3,7 @@ import org.example.studentdashboard.Models.ChatResponse;
 import org.springframework.ai.chat.client.ChatClient;
 import org.springframework.ai.chat.memory.ChatMemory;
 import org.springframework.ai.chat.messages.Message;
+import org.springframework.ai.chat.prompt.Prompt;
 import org.springframework.ai.openai.OpenAiChatModel;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.jdbc.core.JdbcTemplate;
@@ -38,9 +39,9 @@ public class ChatService {
                  .entity(ChatResponse.class);
     }
 
-    private Flux<String> streamClient(ChatClient client, String msg, String userId){
+    private Flux<String> streamClient(ChatClient client, Prompt msg, String userId){
         janitorService.checkAndSummarize(userId);
-        return client.prompt().user(msg).system(systemPrompt).advisors(a -> a.param(ChatMemory.CONVERSATION_ID,userId)).stream().content();
+        return client.prompt(msg).system(systemPrompt).advisors(a -> a.param(ChatMemory.CONVERSATION_ID,userId)).stream().content();
     }
 
     public ChatResponse chat(String model, String q){
@@ -52,21 +53,22 @@ public class ChatService {
     }
 
     public Flux<String> streamChat(String model, String q,String userId){
+        Prompt prompt = new Prompt(q);
         if(model.equals("claude"))
-            return streamClient(anthropicClient,q,userId);
+            return streamClient(anthropicClient,prompt,userId);
         else if(model.equals("chatGpt"))
-            return streamClient(openAiClient,q,userId);
+            return streamClient(openAiClient,prompt,userId);
         throw new RuntimeException("This model isnt integrated");
     }
 
     public List<Map<String,Object>> getChatHistory(String userId){
         String sql = """
-                SELECT * FROM spring_ai_chat_memory
+                SELECT conversation_id,content,type,timestamp FROM spring_ai_chat_memory
                 WHERE conversation_id = ?
                 
                 UNION ALL
                 
-                SELECT * FROM spring_ai_chat_memory
+                SELECT conversation_id,content,type,timestamp FROM chat_memory_archive
                 WHERE conversation_id = ?
                 
                 ORDER BY timestamp ASC

@@ -12,13 +12,13 @@ import java.util.List;
 import java.util.Map;
 
 @RestController
-@RequestMapping
+@RequestMapping("/chat")
 public class ChatController {
 
     @Autowired
     ChatService chatService;
 
-    @GetMapping("/{model}/chat")
+    @GetMapping("/{model}/block-chat")
     public ResponseEntity<ChatResponse> chat(@PathVariable String model, @RequestParam(required = true,value = "q") String q){
         return ResponseEntity.ok(chatService.chat(model,q));
     }
