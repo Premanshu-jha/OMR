@@ -1,6 +1,5 @@
-package org.example.studentdashboard.Models;
+package org.example.studentdashboard.CSVModels;
 import com.opencsv.bean.CsvBindByName;
-import com.opencsv.bean.CsvBindByPosition;
 import lombok.Data;
 
 @Data

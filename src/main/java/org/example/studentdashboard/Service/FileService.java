@@ -6,7 +6,10 @@ import com.opencsv.bean.CsvToBeanBuilder;
 import jakarta.persistence.EntityManager;
 import jakarta.persistence.PersistenceContext;
 import jakarta.transaction.Transactional;
+import org.bson.Document;
 import org.bson.types.ObjectId;
+import org.example.studentdashboard.CSVModels.ExamResults;
+import org.example.studentdashboard.CSVModels.StudentData;
 import org.example.studentdashboard.Models.*;
 import org.example.studentdashboard.Repositories.DownloadStatusRepository;
 import org.example.studentdashboard.Repositories.ExamRepository;
@@ -57,14 +60,39 @@ public class FileService {
         return gridFSFile;
     }
 
+    public String getMetaInfo(String attribute,GridFSFile file){
+        Document metaData = file.getMetadata();
+        if(metaData != null){
+            if(metaData.containsKey(attribute)){
+                return metaData.getString(attribute);
+            }
+        }
+
+        return null;
+    }
+
+    public double getFileSizeInMb(GridFSFile file){
+        double bytes = file.getLength();
+        double mb = bytes/(1024 * 1024);
+        return Math.round(mb*100.0)/100.0;
+
+    }
     public List<FileResponse> getAllFileLabels(){
         List<FileResponse> list = new ArrayList<>();
         Query query = new Query().with(Sort.by(Sort.Direction.DESC,"uploadDate"));
         gridFsTemplate.find(query).forEach(file -> {
-            double bytes = file.getLength();
-            double mb = bytes/(1024 * 1024);
-            mb = Math.round(mb*100.0)/100.0;
-            list.add(new FileResponse(file.getObjectId().toHexString(),file.getFilename(),mb,file.getUploadDate().toString()));
+            double mb = getFileSizeInMb(file);
+
+            String examTypeStr = getMetaInfo("examType",file);
+            String examIdentifierStr = getMetaInfo("examIdentifier",file);
+            list.add(FileResponse.builder().id(file.getObjectId().toHexString())
+                    .fileName(file.getFilename())
+                    .size(mb)
+                    .uploadDate(file.getUploadDate().toString())
+                    .examType(examTypeStr)
+                    .examIdentifier(examIdentifierStr)
+                    .build()
+            );
         });
         return list;
     }
@@ -76,19 +104,39 @@ public class FileService {
         Query chunkQuery = new Query(Criteria.where("files_id").is(objId));
         gridFsTemplate.delete(chunkQuery);
     }
-    public String uploadOmrFile(MultipartFile file) throws IOException {
+    public FileResponse uploadOmrFile(MultipartFile file, String examType) throws IOException {
         String originalFileName = file.getOriginalFilename();
+        String examIdentifier = getExamIdentifier(originalFileName);
+
+        // 1. Delete the old file if it exists
         GridFSFile existingFile = gridFsTemplate.findOne(
                 new Query(Criteria.where("filename").is(originalFileName)));
         if(existingFile != null) {
             deleteFile(existingFile.getObjectId().toString());
         }
-        OmrFile metaData = new OmrFile(originalFileName,file.getContentType(),file.getSize(),Instant.now());
+
+        // 2. Save the new file
+        OmrFile metaData = OmrFile.builder()
+                .fileName(originalFileName)
+                .fileType(file.getContentType())
+                .fileSize(file.getSize())
+                .uploadedAt(Instant.now())
+                .examType(examType)
+                .examIdentifier(examIdentifier)
+                .build();
 
         ObjectId fileId = gridFsTemplate.store(file.getInputStream(),
-                file.getOriginalFilename(),file.getContentType(),metaData);
+                file.getOriginalFilename(), file.getContentType(), metaData);
+        GridFSFile newlySavedFile = gridFsTemplate.findOne(new Query(Criteria.where("_id").is(fileId)));
 
-        return fileId.toString();
+        return FileResponse.builder()
+                .id(fileId.toHexString())
+                .fileName(originalFileName)
+                .size(getFileSizeInMb(newlySavedFile))
+                .uploadDate(newlySavedFile.getUploadDate().toString())
+                .examType(examType)
+                .examIdentifier(examIdentifier)
+                .build();
     }
 
 
@@ -149,11 +197,12 @@ public class FileService {
          }
     }
 
-    public GridFSFile getExamResultFile(){
+    public GridFSFile getExamResultFile(String examType,String examIdentifier){
         Query query = new Query().with(Sort.by(Sort.Direction.DESC,"uploadDate"));
         GridFSFindIterable iterable = gridFsTemplate.find(query);
         for(GridFSFile file:iterable) {
-            if (file.getFilename().contains("exam_results")) {
+            if (file.getFilename().contains("exam_results") && examType.equals(getMetaInfo("examType",file)) &&
+                    examIdentifier.equals(getMetaInfo("examIdentifier",file))) {
                 return file;
             }
         }
@@ -161,13 +210,16 @@ public class FileService {
     }
 
     public String getExamIdentifier(String fileName){
-        return fileName.replace("exam_results_","").replace(".csv","")
-                .replaceAll("\\s?\\(\\d+\\)","").trim();
+        if(fileName.contains("exam_results_")) {
+            return fileName.replace("exam_results_", "").replace(".csv", "")
+                    .replaceAll("\\s?\\(\\d+\\)", "").trim();
+        }
+        return null;
     }
 
 
-    public ExamResults getExamResults() throws IOException {
-                GridFSFile examFile = getExamResultFile();
+    public ExamResults getExamResults(String examType,String examIdentifier) throws IOException {
+                GridFSFile examFile = getExamResultFile(examType,examIdentifier);
                 GridFsResource gridFsResource = gridFsTemplate.getResource(examFile);
                 List<StudentData> list = processCsvFile(gridFsResource.getInputStream());
                 if(list.size() > 0) {
@@ -201,7 +253,7 @@ public class FileService {
         }
 
     @Transactional
-    public void bulkPushFileData() throws IOException {
+    public void bulkPushFileData(String examType,String examIdentifier) throws IOException {
         Map<String,Long> studentMap = new HashMap<>();
         studentRepository.findAll().forEach(student -> {
             String rollNo = student.getRollNo();
@@ -209,7 +261,7 @@ public class FileService {
                  studentMap.put(rollNo,student.getId());
         });
 
-        ExamResults examResults = getExamResults();
+        ExamResults examResults = getExamResults(examType,examIdentifier);
         Optional<Exam> optionalExam = examRepository.findByExamIdentifier(examResults.getExamIdentifier());
         if(optionalExam.isPresent()) throw new RuntimeException("Records allready present for this exam!");
         else{
