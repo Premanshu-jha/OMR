@@ -1,9 +1,7 @@
 package org.example.studentdashboard.Controller;
-import com.mongodb.client.gridfs.model.GridFSFile;
 import org.example.studentdashboard.Models.DownloadStatus;
-import org.example.studentdashboard.Models.ExamResults;
+import org.example.studentdashboard.CSVModels.ExamResults;
 import org.example.studentdashboard.Models.FileResponse;
-import org.example.studentdashboard.Models.StudentData;
 import org.example.studentdashboard.Service.FileService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
@@ -14,7 +12,7 @@ import java.io.IOException;
 import java.util.List;
 
 @RestController
-@RequestMapping("/file")
+@RequestMapping("/api/file")
 public class FileController {
 
     @Autowired
@@ -26,9 +24,9 @@ public class FileController {
     }
 
 
-    @PostMapping("/upload")
-    public String uploadFile(@RequestParam("file") MultipartFile file) throws IOException {
-         return fileService.uploadOmrFile(file);
+    @PostMapping("/{examType}/upload")
+    public FileResponse uploadFile(@RequestParam("file") MultipartFile file,@PathVariable String examType) throws IOException {
+         return fileService.uploadOmrFile(file,examType);
     }
 
     @DeleteMapping("/delete/{id}")
@@ -52,9 +50,9 @@ public class FileController {
          return fileService.getExamResults();
     }
 
-    @PostMapping("/bulk-update")
-    public ResponseEntity<String> bulkUpdate() throws IOException {
-        fileService.bulkPushFileData();
+    @PostMapping("/{examType}/{examIdentifier}/bulk-update")
+    public ResponseEntity<String> bulkUpdate(@PathVariable String examType,@PathVariable String examIdentifier) throws IOException {
+        fileService.bulkPushFileData(examType,examIdentifier);
         return ResponseEntity.ok("File records pushed succesfully!");
     }
 

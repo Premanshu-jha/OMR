@@ -1,7 +1,8 @@
-package org.example.studentdashboard.Models;
+package org.example.studentdashboard.CSVModels;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+
 import java.util.List;
 
 @Data

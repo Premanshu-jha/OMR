@@ -13,7 +13,8 @@ import java.util.List;
 @EqualsAndHashCode(onlyExplicitlyIncluded = true)
 @Builder
 @Table(indexes = {
-        @Index(name = "exam_identifier_index",columnList = "exam_identifier")
+        @Index(name = "exam_identifier_index",columnList = "exam_identifier"),
+        @Index(name = "exam_type_index",columnList = "exam_type")
 })
 public class Exam {
 
@@ -36,6 +37,9 @@ public class Exam {
     private Integer chemistryTotalMarks;
 
     private Integer totalStudentsAttempted;
+
+    @Column(name = "exam_type")
+    private String examType;
 
     @OneToMany(cascade = CascadeType.ALL,fetch = FetchType.LAZY,mappedBy = "exam")
     @JsonIgnore
