@@ -45,9 +45,9 @@ public class FileController {
          return fileService.getDownloadStatus(id);
     }
 
-    @GetMapping("/exam-results")
-    public ExamResults getExamResults() throws IOException {
-         return fileService.getExamResults();
+    @GetMapping("/{examType}/{examIdentifier}/exam-results")
+    public ExamResults getExamResults(@PathVariable String examType,@PathVariable String examIdentifier) throws IOException {
+         return fileService.getExamResults(examType,examIdentifier);
     }
 
     @PostMapping("/{examType}/{examIdentifier}/bulk-update")
