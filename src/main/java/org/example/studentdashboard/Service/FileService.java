@@ -266,6 +266,7 @@ public class FileService {
         if(optionalExam.isPresent()) throw new RuntimeException("Records allready present for this exam!");
         else{
             Exam exam = Exam.builder()
+                    .examType(examType)
                     .examIdentifier(examResults.getExamIdentifier())
                     .examTotalMarks(examResults.getExamTotalMarks())
                     .physicsTotalMarks(examResults.getPhysicsTotalMarks())
