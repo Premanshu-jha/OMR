@@ -8,4 +8,5 @@ import java.util.List;
 public interface StudentExamRepository extends JpaRepository<StudentExam,Long> {
 
     public List<StudentExam> findByStudent_RollNo(String rollNo);
+
 }
