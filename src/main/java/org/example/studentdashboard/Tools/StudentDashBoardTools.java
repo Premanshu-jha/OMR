@@ -35,6 +35,11 @@ public class StudentDashBoardTools {
          return studentExamRepository.findByStudent_RollNo(rollNo);
     }
 
+    @Tool(description = "Find students by name and return matching roll numbers.")
+    public List<Student> findStudentsByName(String name){
+        return studentRepository.findByNameContainingIgnoreCase(name);
+    }
+
     @Tool(description = "Get total possible marks and global stats for a specific exam by its identifier.")
     public Optional<Exam> getExamMetaData(String examIdentifier){
          return examRepository.findByExamIdentifier(examIdentifier);

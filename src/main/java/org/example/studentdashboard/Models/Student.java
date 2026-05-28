@@ -13,7 +13,8 @@ import java.util.List;
 @EqualsAndHashCode(onlyExplicitlyIncluded = true)
 @Builder
 @Table(indexes = {
-        @Index(name = "roll_index",columnList = "roll_no")
+        @Index(name = "roll_index",columnList = "roll_no"),
+        @Index(name = "name_index",columnList = "name")
 })
 public class Student {
     @Id
@@ -26,6 +27,7 @@ public class Student {
     @Column(name = "roll_no",unique = true,nullable = false)
     private String rollNo;
 
+    @Column(name = "name")
     private String name;
 
     private String phone;
