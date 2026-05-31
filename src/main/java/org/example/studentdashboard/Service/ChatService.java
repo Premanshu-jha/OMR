@@ -8,8 +8,10 @@ import org.springframework.ai.openai.OpenAiChatModel;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.stereotype.Service;
+import org.springframework.web.multipart.MultipartFile;
 import reactor.core.publisher.Flux;
 
+import java.io.IOException;
 import java.util.List;
 import java.util.Map;
 
@@ -26,12 +28,18 @@ public class ChatService {
 
     private final String systemPrompt = "U r like a tutor,a personallized helper,friend and guide for student,helping the student grow and making him the better version of himself";
 
+    private final FileService fileService;
+
+    private final UniversalIngestionService universalIngestionService;
+
     public ChatService(@Qualifier("openAiChatClient") ChatClient openAiClient,
-                       @Qualifier("anthropicChatClient") ChatClient anthropicClient,MemoryJanitorService janitorService,JdbcTemplate jdbcTemplate){
+                       @Qualifier("anthropicChatClient") ChatClient anthropicClient,MemoryJanitorService janitorService,JdbcTemplate jdbcTemplate,FileService fileService,UniversalIngestionService universalIngestionService){
         this.openAiClient = openAiClient;
         this.anthropicClient = anthropicClient;
         this.janitorService = janitorService;
         this.jdbcTemplate = jdbcTemplate;
+        this.fileService = fileService;
+        this.universalIngestionService = universalIngestionService;
     }
 
     private ChatResponse useClient(ChatClient client, String msg){
@@ -74,6 +82,11 @@ public class ChatService {
                 ORDER BY timestamp ASC
                 """;
          return jdbcTemplate.queryForList(sql,userId,userId);
+    }
+
+    public void chatUploadFile(MultipartFile file,String rollNumber) throws Exception {
+         fileService.uploadFile(file,null,rollNumber);
+         universalIngestionService.ingestFile(file);
     }
 
 

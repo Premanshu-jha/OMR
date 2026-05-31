@@ -18,4 +18,5 @@ public class OmrFile {
     private Instant uploadedAt;
     private String examType;
     private String examIdentifier;
+    private String rollNumber;
 }

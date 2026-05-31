@@ -24,6 +24,7 @@ import org.springframework.data.mongodb.gridfs.GridFsTemplate;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
+import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.multipart.MultipartFile;
@@ -104,7 +105,7 @@ public class FileService {
         Query chunkQuery = new Query(Criteria.where("files_id").is(objId));
         gridFsTemplate.delete(chunkQuery);
     }
-    public FileResponse uploadOmrFile(MultipartFile file, String examType) throws IOException {
+    public FileResponse uploadFile(MultipartFile file, String examType,String rollNumber) throws IOException {
         String originalFileName = file.getOriginalFilename();
         String examIdentifier = getExamIdentifier(originalFileName);
 
@@ -123,6 +124,7 @@ public class FileService {
                 .uploadedAt(Instant.now())
                 .examType(examType)
                 .examIdentifier(examIdentifier)
+                .rollNumber(rollNumber)
                 .build();
 
         ObjectId fileId = gridFsTemplate.store(file.getInputStream(),

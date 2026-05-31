@@ -24,9 +24,9 @@ public class FileController {
     }
 
 
-    @PostMapping("/{examType}/upload")
-    public FileResponse uploadFile(@RequestParam("file") MultipartFile file,@PathVariable String examType) throws IOException {
-         return fileService.uploadOmrFile(file,examType);
+    @PostMapping("/upload")
+    public FileResponse uploadFile(@RequestParam("file") MultipartFile file,@RequestParam String examType,@RequestParam String rollNumber) throws IOException {
+         return fileService.uploadFile(file,examType,rollNumber);
     }
 
     @DeleteMapping("/delete/{id}")
