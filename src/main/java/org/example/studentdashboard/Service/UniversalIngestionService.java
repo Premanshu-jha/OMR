@@ -36,6 +36,28 @@ public class UniversalIngestionService {
         this.visionClient = ChatClient.builder(chatModel).build();
     }
 
+    public void verifyVectorCommit(String fileName){
+        System.out.println("Verifying vector database commit for file named: "+fileName);
+        for(int i = 0;i < 10;i++){
+            List<Document> results = vectorStore.similaritySearch("Source Filename: "+fileName);
+            for(Document doc:results){
+                 if(doc.getMetadata().get("fileName").equals(fileName)){
+                     System.out.println("Vector database commit confirmed in "+ (i + 1) + " seconds");
+                     return;
+                 }
+            }
+
+            try{
+               System.out.println("Indexing in progress... waiting 1 second");
+               Thread.sleep(1000);
+            } catch (InterruptedException e) {
+                Thread.currentThread().interrupt();
+                throw new RuntimeException("Ingestion interrupted while waiting for vector database.");
+            }
+        }
+        throw new RuntimeException("Timeout: Vector database failed to index the file '" + fileName + "' within 10 seconds.");
+    }
+
     public void ingestFile(MultipartFile file) throws Exception{
         String contentType = file.getContentType();
         String fileName = file.getOriginalFilename();
@@ -74,7 +96,8 @@ public class UniversalIngestionService {
                 "Format the output cleanly so it is highly searchable by a database.";
 
         String aiGeneratedDescription = visionClient.prompt().user(u -> u.text(prompt).media(imageMedia)).call().content();
-        Document visionDoc = new Document(aiGeneratedDescription,
+        String searchablePayload = "Source Filename: " + fileName + "\n\nExtracted Content:\n" + aiGeneratedDescription;
+        Document visionDoc = new Document(searchablePayload,
                    Map.of("fileName",fileName,
                            "contentType","vision_extracted_page"));
 
@@ -149,7 +172,8 @@ public class UniversalIngestionService {
     }
 
     private void saveBatchToVectorStore(String csvText,String fileName,int batchNumber,TokenTextSplitter splitter){
-        Document document = new Document(csvText,Map.of("fileName",fileName,
+        String searchablePayload = "Source Filename: " + fileName + " (Batch " + batchNumber + ")\n\n" + csvText;
+        Document document = new Document(searchablePayload,Map.of("fileName",fileName,
                                         "batchNumber",batchNumber,
                                          "contentType","spreadsheet"));
 
@@ -174,7 +198,7 @@ public class UniversalIngestionService {
          }
     }
 
-    public void processGenericText(MultipartFile file) throws Exception{
+    public void processGenericText(MultipartFile file) throws Exception {
         InputStreamResource resource = new InputStreamResource(file.getInputStream()){
             @Override
             public String getFilename(){
@@ -183,18 +207,23 @@ public class UniversalIngestionService {
 
             @Override
             public long contentLength(){
-                 return file.getSize();
+                return file.getSize();
             }
         };
 
         TikaDocumentReader documentReader = new TikaDocumentReader(resource);
-        List<Document> docs = documentReader.get();
+        List<Document> rawDocs = documentReader.get();
+        List<Document> enrichedDocs = rawDocs.stream().map(doc -> {
+            Map<String, Object> metadata = doc.getMetadata();
+            metadata.put("fileName", file.getOriginalFilename());
+            metadata.put("contentType", "document");
+            String searchablePayload = "Source Filename: " + file.getOriginalFilename() + "\n\n" + doc.getText();
+            return new Document(searchablePayload, metadata);
 
-        for(Document doc:docs){
-            doc.getMetadata().put("fileName",file.getOriginalFilename());
-        }
+        }).toList();
+
         TokenTextSplitter splitter = new TokenTextSplitter();
-        vectorStore.add(splitter.apply(docs));
+        vectorStore.add(splitter.apply(enrichedDocs));
     }
 
 }

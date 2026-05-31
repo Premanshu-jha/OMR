@@ -37,7 +37,7 @@ public class ChatController {
     }
 
     @PostMapping("/upload")
-    public void uploadFile(@RequestParam("file") MultipartFile file, @RequestParam String rollNumber) throws Exception {
+    public void uploadFile(@RequestParam("file") MultipartFile file, @RequestParam(required = false) String rollNumber) throws Exception {
         chatService.chatUploadFile(file,rollNumber);
     }
 

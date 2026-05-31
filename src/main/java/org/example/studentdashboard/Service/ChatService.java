@@ -26,7 +26,10 @@ public class ChatService {
 
     private final JdbcTemplate jdbcTemplate;
 
-    private final String systemPrompt = "U r like a tutor,a personallized helper,friend and guide for student,helping the student grow and making him the better version of himself";
+    private final String systemPrompt = "U r like a tutor,a personallized helper,friend and guide for student,helping the student grow and making him the better version of himself" + " " +
+            "If the user prompt mentions an '[Attached: ...]' file or image, DO NOT say that you cannot see images. " +
+            "The image has already been processed by a vision pipeline and the contents are provided to you in your retrieved context. " +
+            "Rely strictly on your retrieved context to answer questions about the uploaded files.";
 
     private final FileService fileService;
 
