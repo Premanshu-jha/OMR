@@ -10,6 +10,7 @@ import org.bson.Document;
 import org.bson.types.ObjectId;
 import org.example.studentdashboard.CSVModels.ExamResults;
 import org.example.studentdashboard.CSVModels.StudentData;
+import org.example.studentdashboard.Enums.Role;
 import org.example.studentdashboard.Models.*;
 import org.example.studentdashboard.Repositories.DownloadStatusRepository;
 import org.example.studentdashboard.Repositories.ExamRepository;
@@ -291,6 +292,7 @@ public class FileService {
                 student.setName(data.getName());
                 student.setPhone(data.getPhone());
                 student.setClassNum(data.getClassNum());
+                student.setRole(Role.STUDENT);
                 Student savedStudent = studentRepository.save(student);
 
 
