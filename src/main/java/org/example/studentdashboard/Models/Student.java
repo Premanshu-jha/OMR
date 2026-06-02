@@ -3,6 +3,7 @@ package org.example.studentdashboard.Models;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 import lombok.*;
+import org.example.studentdashboard.Enums.Role;
 
 import java.util.List;
 
@@ -36,7 +37,12 @@ public class Student {
 
     private Integer classNum;
 
+    @Enumerated(EnumType.STRING)
+    @Column(nullable = false)
+    private Role role;
+
     @OneToMany(cascade = CascadeType.ALL,fetch = FetchType.LAZY,mappedBy = "student")
     @JsonIgnore
     private List<StudentExam> studentExams;
+
 }
