@@ -1,6 +1,5 @@
 package org.example.studentdashboard.Config;
 
-import org.example.studentdashboard.Advisors.GlobalRewriteAdvisor;
 import org.example.studentdashboard.Tools.StudentDashBoardTools;
 import org.springframework.ai.anthropic.AnthropicChatModel;
 import org.springframework.ai.chat.client.ChatClient;
@@ -29,52 +28,41 @@ public class AIConfig {
                 .build();
     }
 
+    // ==========================================
+    // AGENT 1: OpenAI (The Orchestrator)
+    // ==========================================
     @Bean(name = "openAiChatClient")
-    public ChatClient openAiChatClient(OpenAiChatModel chatModel, ChatMemory chatMemory,
-                                       VectorStore vectorStore, StudentDashBoardTools studentDashBoardTools){
+    public ChatClient openAiChatClient(OpenAiChatModel chatModel,
+                                       ChatMemory chatMemory,
+                                       VectorStore vectorStore, // 💥 Uses your single vector_store table!
+                                       StudentDashBoardTools studentDashBoardTools) {
 
-        MessageChatMemoryAdvisor messageChatMemoryAdvisor = MessageChatMemoryAdvisor.builder(chatMemory)
-                .order(10)
-                .build();
-        VectorStoreChatMemoryAdvisor vectorChatMemoryAdvisor = VectorStoreChatMemoryAdvisor.builder(vectorStore)
-                .order(15)
-                .build();
+        String orchestratorPrompt = """
+    You are the Lead Orchestrator AI for the Vidyavriti Student Dashboard.
+    
+    RULES OF ENGAGEMENT:
+    1. GENERAL KNOWLEDGE: If the user asks general questions (math, science, history, coding), answer them directly using your own vast expertise.
+    2. CHAT HISTORY: Use your chat memory to remember past conversations and context.
+    3. DOCUMENTS & FILES: You DO NOT have direct access to files. 
+    4. WHEN TO USE THE TOOL: ONLY trigger the `searchDocumentDatabase` tool if the user explicitly mentions an 'uploaded file', 'document', or asks about their specific syllabus, course rules, or personal academic data that is not in your chat memory.
+    """;
 
-        VectorStoreDocumentRetriever retriever = VectorStoreDocumentRetriever
-                .builder()
-                .vectorStore(vectorStore)
-                .topK(5)
-                .filterExpression(new FilterExpressionBuilder()
-                        .in("contentType", "vision_extracted_page", "spreadsheet", "document")
-                        .build())
-                .build();
-
-        // 4. RAG / File Search (Order 30)
-        RetrievalAugmentationAdvisor ragAdvisor = RetrievalAugmentationAdvisor.builder()
-                .documentRetriever(retriever)
-                .queryAugmenter(ContextualQueryAugmenter.builder().allowEmptyContext(true).build())
-                .order(30)
-                .build();
-
-        GlobalRewriteAdvisor globalRewriteAdvisor = new GlobalRewriteAdvisor(chatModel);
+        MessageChatMemoryAdvisor shortTermMemory = MessageChatMemoryAdvisor.builder(chatMemory).order(10).build();
+        VectorStoreChatMemoryAdvisor longTermMemory = VectorStoreChatMemoryAdvisor.builder(vectorStore).order(15).build();
 
         return ChatClient.builder(chatModel)
-                .defaultAdvisors(messageChatMemoryAdvisor, vectorChatMemoryAdvisor, globalRewriteAdvisor, ragAdvisor)
+                .defaultSystem(orchestratorPrompt)
+                .defaultAdvisors(shortTermMemory, longTermMemory)
                 .defaultTools(studentDashBoardTools)
                 .build();
     }
 
+    // ==========================================
+    // AGENT 2: Anthropic Claude (The RAG Worker)
+    // ==========================================
     @Bean(name = "anthropicChatClient")
-    public ChatClient anthropicChatClient(AnthropicChatModel chatModel, ChatMemory chatMemory,
-                                          VectorStore vectorStore, StudentDashBoardTools studentDashBoardTools){
-
-        MessageChatMemoryAdvisor messageChatMemoryAdvisor = MessageChatMemoryAdvisor.builder(chatMemory)
-                .order(10)
-                .build();
-
-        VectorStoreChatMemoryAdvisor vectorChatMemoryAdvisor = VectorStoreChatMemoryAdvisor.builder(vectorStore)
-                .order(15)
-                .build();
+    public ChatClient anthropicChatClient(AnthropicChatModel chatModel,
+                                          VectorStore vectorStore) {
 
         VectorStoreDocumentRetriever retriever = VectorStoreDocumentRetriever
                 .builder()
@@ -88,14 +76,10 @@ public class AIConfig {
         RetrievalAugmentationAdvisor ragAdvisor = RetrievalAugmentationAdvisor.builder()
                 .documentRetriever(retriever)
                 .queryAugmenter(ContextualQueryAugmenter.builder().allowEmptyContext(true).build())
-                .order(30)
                 .build();
 
-        GlobalRewriteAdvisor globalRewriteAdvisor = new GlobalRewriteAdvisor(chatModel);
-
         return ChatClient.builder(chatModel)
-                .defaultAdvisors(messageChatMemoryAdvisor, vectorChatMemoryAdvisor, globalRewriteAdvisor, ragAdvisor)
-                .defaultTools(studentDashBoardTools)
+                .defaultAdvisors(ragAdvisor) // Claude ONLY does RAG, no memory!
                 .build();
     }
 }
