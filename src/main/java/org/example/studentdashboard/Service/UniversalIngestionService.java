@@ -67,9 +67,11 @@ public class UniversalIngestionService {
         else if(contentType.equals("application/vnd.openxmlformats-officedocument.spreadsheetml.sheet") ||
           contentType.equals("application/vnd.ms-excel"))
             processExcel(file);
-        else if(contentType.startsWith("image/")) processRawImage(file.getBytes(),fileName);
+        else if(contentType.startsWith("image/")) processRawImage(file.getBytes(),fileName,contentType);
         else if(contentType.equals("text/csv")) processCsv(file);
         else processGenericText(file);
+
+        verifyVectorCommit(fileName);
     }
 
     private void processPdfWithVision(MultipartFile file) throws Exception{
@@ -82,14 +84,14 @@ public class UniversalIngestionService {
                  ImageIO.write(image,"png",bios);
                  byte[] pageBytes = bios.toByteArray();
                  String fileName = file.getOriginalFilename() + "_page_" + (page + 1);
-                 processRawImage(pageBytes,fileName);
+                 processRawImage(pageBytes,fileName,"image/png");
              }
 
          }
     }
 
-    private void processRawImage(byte[] imageBytes,String fileName){
-        Media imageMedia = new Media(MimeTypeUtils.IMAGE_PNG,new ByteArrayResource(imageBytes));
+    private void processRawImage(byte[] imageBytes,String fileName,String mimeType){
+        Media imageMedia = new Media(MimeTypeUtils.parseMimeType(mimeType),new ByteArrayResource(imageBytes));
         String prompt = "You are an elite academic extraction AI. Analyze this image (which may be a document page, exam paper, or diagram). " +
                 "1. Extract ALL text verbatim. " +
                 "2. If you see diagrams, drawings, circuits, or chemical structures, describe them in extreme mathematical and structural detail (e.g., list masses, resistors, IUPAC names). " +
