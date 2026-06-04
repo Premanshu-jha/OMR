@@ -45,17 +45,14 @@ public class JWTService {
                 .getBody();
     }
 
-    private String getRollNumber(String token){
+    public String getRollNumber(String token){
          return extractAllClaims(token).getSubject();
     }
 
-    private boolean isTokenExpired(String token){
+    public boolean isTokenExpired(String token){
         return extractAllClaims(token).getExpiration().before(new Date());
     }
 
-    public boolean validateToken(String token,Student student){
-         return (student.getRollNo().equals(getRollNumber(token))) && !isTokenExpired(token);
-    }
 
     private Key generateKey(){
         byte[] keysBytes = Decoders.BASE64.decode(SECRET);
