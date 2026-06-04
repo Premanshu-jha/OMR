@@ -34,7 +34,7 @@ public class AIConfig {
     @Bean(name = "openAiChatClient")
     public ChatClient openAiChatClient(OpenAiChatModel chatModel,
                                        ChatMemory chatMemory,
-                                       VectorStore vectorStore, // 💥 Uses your single vector_store table!
+                                       VectorStore vectorStore,
                                        StudentDashBoardTools studentDashBoardTools) {
 
         String orchestratorPrompt = """
