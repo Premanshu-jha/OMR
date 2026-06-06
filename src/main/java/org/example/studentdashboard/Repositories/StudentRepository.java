@@ -10,5 +10,7 @@ public interface StudentRepository extends JpaRepository<Student,Long> {
 
     public Optional<Student> findByRollNo(String rollNo);
 
+    public Student findByPhone(String phoneNumber);
+
     public List<Student> findByNameContainingIgnoreCase(String name);
 }
