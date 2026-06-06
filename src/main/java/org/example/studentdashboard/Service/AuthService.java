@@ -31,10 +31,6 @@ public class AuthService {
         Optional<Student> student = studentRepository.findByRollNo(rollNumber);
         if(student.isPresent()){
             String phoneNumber = student.get().getPhone();
-            Optional<OtpDetails> existingOtp = otpRepository.findById(phoneNumber);
-            if(existingOtp.isPresent()){
-                throw new RuntimeException("An OTP has already been sent to your registered mobile number. Please check your SMS. It is valid for 15 minutes.");
-            }
             String otp = String.format("%04d",new SecureRandom().nextInt(10000));
             otpDetails.setOtp(otp);
             otpDetails.setPhoneNumber(phoneNumber);
