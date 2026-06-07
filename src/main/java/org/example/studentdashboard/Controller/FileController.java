@@ -45,7 +45,7 @@ public class FileController {
       return fileService.downloadFile(id,ticketId);
     }
 
-    @GetMapping("download/status/{id}")
+    @GetMapping("/download/status/{id}")
     public DownloadStatus getDownloadStatus(@PathVariable String id){
          return fileService.getDownloadStatus(id);
     }
