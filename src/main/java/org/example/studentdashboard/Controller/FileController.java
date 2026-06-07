@@ -19,8 +19,12 @@ public class FileController {
     FileService fileService;
 
     @GetMapping
-    public List<FileResponse> getAllFiles(){
-         return fileService.getAllFileLabels();
+    public List<FileResponse> getAllFiles(@RequestHeader("Authorization") String authorization){
+        if (authorization == null || !authorization.startsWith("Bearer ")) {
+            throw new RuntimeException("Invalid or missing Bearer token");
+        }
+        String token = authorization.substring(7);
+         return fileService.getAllFileLabels(token);
     }
 
 

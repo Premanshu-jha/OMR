@@ -18,4 +18,5 @@ public class FileResponse {
     private String uploadDate;
     private String examType;
     private String examIdentifier;
+    private String rollNumber;
 }

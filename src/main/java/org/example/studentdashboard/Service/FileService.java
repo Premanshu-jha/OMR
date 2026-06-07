@@ -5,6 +5,7 @@ import com.opencsv.bean.CsvToBean;
 import com.opencsv.bean.CsvToBeanBuilder;
 import jakarta.persistence.EntityManager;
 import jakarta.persistence.PersistenceContext;
+import jakarta.servlet.http.HttpServletRequest;
 import jakarta.transaction.Transactional;
 import org.bson.Document;
 import org.bson.types.ObjectId;
@@ -51,6 +52,9 @@ public class FileService {
     @Autowired
     private DownloadTicketRepository ticketRepository;
 
+    @Autowired
+    JWTService jwtService;
+
     @PersistenceContext
     EntityManager entityManager;
 
@@ -78,23 +82,32 @@ public class FileService {
         return Math.round(mb*100.0)/100.0;
 
     }
-    public List<FileResponse> getAllFileLabels(){
+    public List<FileResponse> getAllFileLabels(String token){
+        String role = jwtService.getRole(token);
+        String rollNumber = jwtService.getRollNumber(token);
         List<FileResponse> list = new ArrayList<>();
         Query query = new Query().with(Sort.by(Sort.Direction.DESC,"uploadDate"));
+
+        if(!"ADMIN".equalsIgnoreCase(role))
+            query.addCriteria(Criteria.where("metadata.rollNumber").is(rollNumber));
+
         gridFsTemplate.find(query).forEach(file -> {
             double mb = getFileSizeInMb(file);
 
             String examTypeStr = getMetaInfo("examType",file);
             String examIdentifierStr = getMetaInfo("examIdentifier",file);
+            String fileRollNumber = getMetaInfo("rollNumber", file);
             list.add(FileResponse.builder().id(file.getObjectId().toHexString())
                     .fileName(file.getFilename())
                     .size(mb)
                     .uploadDate(file.getUploadDate().toString())
                     .examType(examTypeStr)
                     .examIdentifier(examIdentifierStr)
+                    .rollNumber(fileRollNumber)
                     .build()
             );
         });
+
         return list;
     }
 
@@ -105,7 +118,7 @@ public class FileService {
         Query chunkQuery = new Query(Criteria.where("files_id").is(objId));
         gridFsTemplate.delete(chunkQuery);
     }
-    public FileResponse uploadFile(MultipartFile file, String examType,String rollNumber) throws IOException {
+    public FileResponse uploadFile(MultipartFile file, String examType, String rollNumber) throws IOException {
         String originalFileName = file.getOriginalFilename();
         String examIdentifier = getExamIdentifier(originalFileName);
 
@@ -138,6 +151,7 @@ public class FileService {
                 .uploadDate(newlySavedFile.getUploadDate().toString())
                 .examType(examType)
                 .examIdentifier(examIdentifier)
+                .rollNumber(rollNumber)
                 .build();
     }
 
