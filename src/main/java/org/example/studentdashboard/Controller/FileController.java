@@ -35,9 +35,14 @@ public class FileController {
          return ResponseEntity.ok().body("File deleted succesfully!");
     }
 
+    @GetMapping("/generate-ticket/{fileId}")
+    public String generateTicket(@PathVariable String fileId) {
+        return fileService.generateTicket(fileId);
+    }
+
     @GetMapping("/download/{id}")
-    public ResponseEntity<StreamingResponseBody> downloadFile(@PathVariable String id) throws IOException{
-      return fileService.downloadFile(id);
+    public ResponseEntity<StreamingResponseBody> downloadFile(@PathVariable String id,@RequestParam("ticket") String ticketId) throws IOException{
+      return fileService.downloadFile(id,ticketId);
     }
 
     @GetMapping("download/status/{id}")

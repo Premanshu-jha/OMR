@@ -12,10 +12,7 @@ import org.example.studentdashboard.CSVModels.ExamResults;
 import org.example.studentdashboard.CSVModels.StudentData;
 import org.example.studentdashboard.Enums.Role;
 import org.example.studentdashboard.Models.*;
-import org.example.studentdashboard.Repositories.DownloadStatusRepository;
-import org.example.studentdashboard.Repositories.ExamRepository;
-import org.example.studentdashboard.Repositories.StudentExamRepository;
-import org.example.studentdashboard.Repositories.StudentRepository;
+import org.example.studentdashboard.Repositories.*;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.mongodb.core.query.Criteria;
@@ -25,7 +22,6 @@ import org.springframework.data.mongodb.gridfs.GridFsTemplate;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
-import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.multipart.MultipartFile;
@@ -51,6 +47,9 @@ public class FileService {
 
     @Autowired
     StudentExamRepository studentExamRepository;
+
+    @Autowired
+    private DownloadTicketRepository ticketRepository;
 
     @PersistenceContext
     EntityManager entityManager;
@@ -149,7 +148,24 @@ public class FileService {
                  .orElse(new DownloadStatus(fileId,"NOT STARTED"));
     }
 
-    public ResponseEntity<StreamingResponseBody> downloadFile(@PathVariable String fileId) throws IOException{
+    public String generateTicket(String fileId){
+        String ticketId = UUID.randomUUID().toString();
+        DownloadTicket ticket = new DownloadTicket();
+        ticket.setTicketId(ticketId);
+        ticket.setFileId(fileId);
+        ticketRepository.save(ticket);
+
+        return ticketId;
+    }
+
+    public ResponseEntity<StreamingResponseBody> downloadFile(String fileId,String ticketId) throws IOException{
+        DownloadTicket validTicket = ticketRepository.findById(ticketId)
+                .orElseThrow(() -> new RuntimeException("Invalid or expired download ticket!"));
+
+        if (!validTicket.getFileId().equals(fileId)) {
+            throw new RuntimeException("Ticket does not match the requested file!");
+        }
+        ticketRepository.deleteById(ticketId);
         GridFsResource gridFsResource = gridFsTemplate.getResource(getFileLabel(fileId));
         statusRepository.save(new DownloadStatus(fileId,"PENDING"));
         StreamingResponseBody responseBody = outputStream -> {
