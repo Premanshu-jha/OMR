@@ -23,8 +23,7 @@ public class SecurityConfig {
                         session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .authorizeHttpRequests(req ->
                         req.requestMatchers("/api/auth/**").permitAll()
-                        .requestMatchers("/api/students/*/report").hasRole("STUDENT")
-                                .requestMatchers("/api/students/**").hasRole("ADMIN")
+                                .requestMatchers("/api/file/download/*").permitAll()
                                 .anyRequest().authenticated()
                 ).addFilterBefore(jwtFilter, UsernamePasswordAuthenticationFilter.class)
                 .build();
