@@ -25,7 +25,7 @@ public class JWTService {
         claims.put("phone",student.getPhone());
         claims.put("city",student.getCity());
         claims.put("classNum",student.getClassNum());
-        claims.put("role",student.getRole());
+        claims.put("role",student.getRole().name());
 
         return Jwts.builder()
                 .addClaims(claims)
@@ -47,6 +47,10 @@ public class JWTService {
 
     public String getRollNumber(String token){
          return extractAllClaims(token).getSubject();
+    }
+
+    public String getRole(String token){
+        return extractAllClaims(token).get("role", String.class);
     }
 
     public boolean isTokenExpired(String token){
