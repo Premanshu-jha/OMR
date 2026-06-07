@@ -5,7 +5,6 @@ import com.opencsv.bean.CsvToBean;
 import com.opencsv.bean.CsvToBeanBuilder;
 import jakarta.persistence.EntityManager;
 import jakarta.persistence.PersistenceContext;
-import jakarta.servlet.http.HttpServletRequest;
 import jakarta.transaction.Transactional;
 import org.bson.Document;
 import org.bson.types.ObjectId;
@@ -24,7 +23,6 @@ import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
-import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.servlet.mvc.method.annotation.StreamingResponseBody;
 
@@ -164,19 +162,19 @@ public class FileService {
 
     public String generateTicket(String fileId){
         String ticketId = UUID.randomUUID().toString();
-        DownloadTicket ticket = new DownloadTicket();
+        Ticket ticket = new Ticket();
         ticket.setTicketId(ticketId);
-        ticket.setFileId(fileId);
+        ticket.setEntityId(fileId);
         ticketRepository.save(ticket);
 
         return ticketId;
     }
 
     public ResponseEntity<StreamingResponseBody> downloadFile(String fileId,String ticketId) throws IOException{
-        DownloadTicket validTicket = ticketRepository.findById(ticketId)
+        Ticket validTicket = ticketRepository.findById(ticketId)
                 .orElseThrow(() -> new RuntimeException("Invalid or expired download ticket!"));
 
-        if (!validTicket.getFileId().equals(fileId)) {
+        if (!validTicket.getEntityId().equals(fileId)) {
             throw new RuntimeException("Ticket does not match the requested file!");
         }
         ticketRepository.deleteById(ticketId);

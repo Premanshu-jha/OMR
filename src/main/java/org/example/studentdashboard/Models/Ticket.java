@@ -6,9 +6,9 @@ import org.springframework.data.redis.core.RedisHash;
 
 @RedisHash(value = "DownloadTicket",timeToLive = 30)
 @Data
-public class DownloadTicket {
+public class Ticket {
 
     @Id
     private String ticketId;
-    private String fileId;
+    private String entityId;
 }
