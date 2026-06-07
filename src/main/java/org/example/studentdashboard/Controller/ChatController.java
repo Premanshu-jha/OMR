@@ -24,9 +24,13 @@ public class ChatController {
         return ResponseEntity.ok(chatService.chat(q,userId));
     }
 
-    @GetMapping(value = "/{userId}/stream-chat", produces = MediaType.TEXT_EVENT_STREAM_VALUE)
-    public ResponseEntity<Flux<String>> streamChat(@RequestParam(required = true, value = "q") String q, @PathVariable String userId){
-        return ResponseEntity.ok(chatService.streamChat(q, userId));
+    @PostMapping(value = "/{userId}/stream-chat", produces = MediaType.TEXT_EVENT_STREAM_VALUE)
+    public ResponseEntity<Flux<String>> streamChat(@RequestBody Map<String,String> payload, @PathVariable String userId){
+        String query = payload.get("query");
+        if (query == null || query.trim().isEmpty()) {
+            throw new IllegalArgumentException("Chat query cannot be empty");
+        }
+        return ResponseEntity.ok(chatService.streamChat(query, userId));
     }
 
     @GetMapping("/{userId}/chat-history")
