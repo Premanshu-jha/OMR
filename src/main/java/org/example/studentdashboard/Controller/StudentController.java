@@ -1,5 +1,6 @@
 package org.example.studentdashboard.Controller;
 
+import org.example.studentdashboard.Enums.Role;
 import org.example.studentdashboard.Models.Student;
 import org.example.studentdashboard.Models.StudentExam;
 import org.example.studentdashboard.Service.StudentService;
@@ -17,8 +18,10 @@ public class StudentController {
     }
 
     @GetMapping
-    public List<Student> getStudents(@RequestParam Integer pageNumber,@RequestParam Integer pageSize){
-        return studentService.getStudents(pageNumber,pageSize);
+    public List<Student> getStudents(@RequestParam Integer pageNumber,@RequestParam Integer pageSize,
+                                     @RequestParam(required = false) String rollNumber,
+                                     @RequestParam(required = false) String city, @RequestParam(required = false) Role role){
+        return studentService.getStudents(pageNumber,pageSize,rollNumber,city,role);
     }
 
     @GetMapping("/{id}/report")
