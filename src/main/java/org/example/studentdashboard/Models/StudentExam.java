@@ -76,7 +76,4 @@ public class StudentExam {
     private String examStartTime;
     private String examEndTime;
 
-
-
-
 }
