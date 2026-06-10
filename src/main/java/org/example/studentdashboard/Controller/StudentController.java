@@ -29,4 +29,14 @@ public class StudentController {
          return studentService.getStudentReport(id);
     }
 
+    @PostMapping
+    public void postStudent(@RequestBody Student student){
+         studentService.postStudent(student);
+    }
+
+    @PatchMapping("/{id}")
+    public void patchStudent(@RequestBody Student student,@PathVariable Long id){
+         studentService.patchStudent(student,id);
+    }
+
 }
