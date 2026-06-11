@@ -22,12 +22,15 @@ public class ExamController {
         return examService.getExams(type);
     }
 
-    @GetMapping("/{id}")
-    public List<StudentExam> getExamLeaderBoard(@PathVariable  Long id,
+    @GetMapping("/{examId}")
+    public List<StudentExam> getExamLeaderBoard(@PathVariable  Long examId,
                                                 @RequestParam  Integer pageNumber,
-                                                @RequestParam  Integer pageSize){
+                                                @RequestParam  Integer pageSize,
+                                                @RequestParam(required = false) String city,
+                                                @RequestParam(required = false) String rollNo,
+                                                @RequestParam(required = false) String name){
 
-      return examService.getExamLeaderBoard(id,pageNumber,pageSize);
+      return examService.getExamLeaderBoard(examId,pageNumber,pageSize,city,rollNo,name);
     }
 
 }

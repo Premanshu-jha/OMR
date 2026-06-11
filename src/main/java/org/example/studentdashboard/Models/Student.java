@@ -16,7 +16,8 @@ import java.util.List;
 @Builder
 @Table(indexes = {
         @Index(name = "roll_index",columnList = "roll_no"),
-        @Index(name = "name_index",columnList = "name")
+        @Index(name = "name_index",columnList = "name"),
+        @Index(name = "city_index",columnList = "city")
 })
 public class Student {
     @Id
@@ -34,6 +35,7 @@ public class Student {
 
     private String phone;
 
+    @Column(name = "city")
     private String city;
 
     private Integer classNum;
