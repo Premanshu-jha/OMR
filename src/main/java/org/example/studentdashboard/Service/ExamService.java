@@ -24,11 +24,24 @@ public class ExamService {
     }
 
     @Transactional
-    public List<StudentExam> getExamLeaderBoard(Long id,Integer pageNumber,Integer pageSize){
-          Exam exam = examRepository.findById(id)
-                  .orElseThrow(()->new RuntimeException("No exam with given id found!"));
+    public List<StudentExam> getExamLeaderBoard(Long examId,Integer pageNumber,Integer pageSize,String city,
+      String rollNo,String name){
+
         Pageable pageReq = PageRequest.of(pageNumber,pageSize, Sort.by("rank"));
-          return studentExamRepository.findByExam_Id(id,pageReq).getContent();
+        if(rollNo != null) {
+            return studentExamRepository
+                    .findByExam_IdAndStudent_RollNoContainingIgnoreCase(examId, rollNo, pageReq).getContent();
+        }
+        else if(city != null) {
+            return studentExamRepository
+                    .findByExam_IdAndStudent_CityContainingIgnoreCase(examId, city, pageReq).getContent();
+        }
+        else if(name != null) {
+            return studentExamRepository
+                    .findByExam_IdAndStudent_NameContainingIgnoreCase(examId, name, pageReq).getContent();
+
+        }
+        return studentExamRepository.findByExam_Id(examId,pageReq).getContent();
     }
 
     public List<Exam> getExams(String type){
