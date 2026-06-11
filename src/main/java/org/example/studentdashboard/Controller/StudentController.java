@@ -20,8 +20,10 @@ public class StudentController {
     @GetMapping
     public List<Student> getStudents(@RequestParam Integer pageNumber,@RequestParam Integer pageSize,
                                      @RequestParam(required = false) String rollNumber,
-                                     @RequestParam(required = false) String city, @RequestParam(required = false) Role role){
-        return studentService.getStudents(pageNumber,pageSize,rollNumber,city,role);
+                                     @RequestParam(required = false) String city,
+                                     @RequestParam(required = false) String name,
+                                     @RequestParam(required = false) Role role){
+        return studentService.getStudents(pageNumber,pageSize,rollNumber,city,name,role);
     }
 
     @GetMapping("/{id}/report")

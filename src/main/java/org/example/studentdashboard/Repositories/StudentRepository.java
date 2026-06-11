@@ -15,11 +15,11 @@ public interface StudentRepository extends JpaRepository<Student,Long> {
 
     public List<Student> findByNameContainingIgnoreCase(String name);
 
-    public Page<Student> findByRollNo(String rollNo,Pageable pageable);
+    public Page<Student> findByRollNoContainingIgnoreCase(String rollNo,Pageable pageable);
 
     public Page<Student> findByNameContainingIgnoreCase(String name, Pageable pageable);
 
-    public Page<Student> findByCity(String city,Pageable pageable);
+    public Page<Student> findByCityContainingIgnoreCase(String city,Pageable pageable);
 
     public Page<Student> findByRole(Role role,Pageable pageable);
 

@@ -19,10 +19,11 @@ public class StudentService {
          this.studentRepository = studentRepository;
     }
 
-    public List<Student> getStudents(Integer pageNumber, Integer pageSize, String rollNumber, String city, Role role){
+    public List<Student> getStudents(Integer pageNumber, Integer pageSize, String rollNumber, String city, String name,Role role){
         Pageable pageReq = PageRequest.of(pageNumber,pageSize);
-        if(rollNumber != null) return studentRepository.findByRollNo(rollNumber,pageReq).getContent();
-        else if(city != null) return studentRepository.findByCity(city,pageReq).getContent();
+        if(rollNumber != null) return studentRepository.findByRollNoContainingIgnoreCase(rollNumber,pageReq).getContent();
+        else if(city != null) return studentRepository.findByCityContainingIgnoreCase(city,pageReq).getContent();
+        else if(name != null) return studentRepository.findByNameContainingIgnoreCase(name,pageReq).getContent();
         else if(role != null) return studentRepository.findByRole(role,pageReq).getContent();
         return studentRepository.findAll(pageReq).getContent();
     }
