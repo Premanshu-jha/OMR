@@ -27,36 +27,36 @@ public class AuthService {
     public void sendOtp(OtpDetails otpDetails){
         String rollNumber = otpDetails.getRollNo();
         if(rollNumber == null) throw new RuntimeException("Please enter your roll number!");
-
-        Optional<Student> student = studentRepository.findByRollNo(rollNumber);
-        if(student.isPresent()){
-            String phoneNumber = student.get().getPhone();
+        Student student = studentRepository.findByRollNo(rollNumber).orElseThrow(()->new RuntimeException("Invalid User!"));
+        if(!student.getSmsOtpByPass()){
+            String phoneNumber = student.getPhone();
             String otp = String.format("%04d",new SecureRandom().nextInt(10000));
             otpDetails.setOtp(otp);
             otpDetails.setPhoneNumber(phoneNumber);
             otpRepository.save(otpDetails);
-            smsService.sendOtp(phoneNumber,otp);
         }
-        else throw new RuntimeException("No student with the given roll number exist!");
     }
 
-    public String verifyOtp(OtpDetails reqOtp){
-        Student student = studentRepository.findByRollNo(reqOtp.getRollNo()).orElseThrow(()->new RuntimeException("Invalid User!"));
-        String phoneNumber = student.getPhone();
-        String otp = reqOtp.getOtp();
-       if(otp == null) throw new RuntimeException("Please enter the otp!");
-       if(phoneNumber == null) throw new RuntimeException("PLease enter the phone number!");
+    public String verifyOtp(OtpDetails reqOtp) {
+        Student student = studentRepository.findByRollNo(reqOtp.getRollNo()).orElseThrow(() -> new RuntimeException("Invalid User!"));
+        if (student.getSmsOtpByPass()) {
+            return jwtService.createToken(student);
+        } else {
+            String phoneNumber = student.getPhone();
+            String otp = reqOtp.getOtp();
+            if (otp == null) throw new RuntimeException("Please enter the otp!");
+            if (phoneNumber == null) throw new RuntimeException("PLease enter the phone number!");
 
-       OtpDetails savedOtp = otpRepository.findById(student.getPhone())
-                    .orElseThrow(()->new RuntimeException("Pease generate the otp first!"));
+            OtpDetails savedOtp = otpRepository.findById(student.getPhone())
+                    .orElseThrow(() -> new RuntimeException("Pease generate the otp first!"));
 
-       if(savedOtp.getOtp().equals(otp)) {
-           otpRepository.deleteById(phoneNumber);
-           return jwtService.createToken(student);
-       }
+            if (savedOtp.getOtp().equals(otp)) {
+                otpRepository.deleteById(phoneNumber);
+                return jwtService.createToken(student);
+            }
 
-      throw new RuntimeException("Invalid otp!");
+            throw new RuntimeException("Invalid otp!");
+        }
     }
-
 
 }

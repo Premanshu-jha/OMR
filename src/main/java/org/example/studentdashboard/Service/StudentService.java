@@ -15,17 +15,26 @@ import java.util.List;
 public class StudentService {
 
     private StudentRepository studentRepository;
-    public StudentService(StudentRepository studentRepository){
+    private JWTService jwtService;
+    public StudentService(StudentRepository studentRepository,JWTService jwtService){
          this.studentRepository = studentRepository;
+         this.jwtService = jwtService;
     }
 
-    public List<Student> getStudents(Integer pageNumber, Integer pageSize, String rollNumber, String city, String name,Role role){
-        Pageable pageReq = PageRequest.of(pageNumber,pageSize);
-        if(rollNumber != null) return studentRepository.findByRollNoContainingIgnoreCase(rollNumber,pageReq).getContent();
-        else if(city != null) return studentRepository.findByCityContainingIgnoreCase(city,pageReq).getContent();
-        else if(name != null) return studentRepository.findByNameContainingIgnoreCase(name,pageReq).getContent();
-        else if(role != null) return studentRepository.findByRole(role,pageReq).getContent();
-        return studentRepository.findAll(pageReq).getContent();
+    public List<Student> getStudents(String token,Integer pageNumber, Integer pageSize, String rollNumber,
+                                     String city, String name,Role role){
+        String tokenRole = jwtService.getRole(token);
+        if(!"STUDENT".equals(tokenRole)) {
+            Pageable pageReq = PageRequest.of(pageNumber, pageSize);
+            if (rollNumber != null)
+                return studentRepository.findByRollNoContainingIgnoreCase(rollNumber, pageReq).getContent();
+            else if (city != null) return studentRepository.findByCityContainingIgnoreCase(city, pageReq).getContent();
+            else if (name != null) return studentRepository.findByNameContainingIgnoreCase(name, pageReq).getContent();
+            else if (role != null) return studentRepository.findByRole(role, pageReq).getContent();
+            return studentRepository.findAll(pageReq).getContent();
+        }
+        else throw new RuntimeException(" r not authorized to view the student directory!");
+
     }
 
     public void postStudent(Student student){
@@ -59,6 +68,10 @@ public class StudentService {
 
         if (student.getRole() != null) {
             existingStudent.setRole(student.getRole());
+        }
+
+        if(student.getSmsOtpByPass() != null){
+             existingStudent.setSmsOtpByPass(student.getSmsOtpByPass());
         }
 
         studentRepository.save(existingStudent);
