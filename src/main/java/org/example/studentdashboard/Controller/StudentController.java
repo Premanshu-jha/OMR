@@ -18,12 +18,16 @@ public class StudentController {
     }
 
     @GetMapping
-    public List<Student> getStudents(@RequestParam Integer pageNumber,@RequestParam Integer pageSize,
+    public List<Student> getStudents(@RequestHeader("Authorization") String authorization,@RequestParam Integer pageNumber,@RequestParam Integer pageSize,
                                      @RequestParam(required = false) String rollNumber,
                                      @RequestParam(required = false) String city,
                                      @RequestParam(required = false) String name,
                                      @RequestParam(required = false) Role role){
-        return studentService.getStudents(pageNumber,pageSize,rollNumber,city,name,role);
+
+        if (authorization == null || !authorization.startsWith("Bearer ")) {
+            throw new RuntimeException("Invalid or missing Bearer token");
+        }
+        return studentService.getStudents(authorization.substring(7),pageNumber,pageSize,rollNumber,city,name,role);
     }
 
     @GetMapping("/{id}/report")

@@ -40,6 +40,8 @@ public class Student {
 
     private Integer classNum;
 
+    private Boolean smsOtpByPass = false;
+
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
     private Role role;
