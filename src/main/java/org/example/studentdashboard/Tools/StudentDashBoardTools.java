@@ -7,7 +7,10 @@ import org.example.studentdashboard.Repositories.ExamRepository;
 import org.example.studentdashboard.Repositories.StudentExamRepository;
 import org.example.studentdashboard.Repositories.StudentRepository;
 import org.springframework.ai.chat.client.ChatClient;
+import org.springframework.ai.document.Document; // Added missing import
 import org.springframework.ai.tool.annotation.Tool;
+import org.springframework.ai.vectorstore.SearchRequest; // Added missing import
+import org.springframework.ai.vectorstore.VectorStore; // Added missing import
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Service;
 
@@ -20,16 +23,18 @@ public class StudentDashBoardTools {
     private final StudentRepository studentRepository;
     private final StudentExamRepository studentExamRepository;
     private final ExamRepository examRepository;
-
+    private final VectorStore vectorStore; // Added dependency
     private final ChatClient claudeClient;
 
     public StudentDashBoardTools(StudentRepository studentRepository,
                                  StudentExamRepository studentExamRepository,
                                  ExamRepository examRepository,
+                                 VectorStore vectorStore, // Added dependency
                                  @Qualifier("anthropicChatClient") ChatClient claudeClient){
         this.studentRepository = studentRepository;
         this.studentExamRepository = studentExamRepository;
         this.examRepository = examRepository;
+        this.vectorStore = vectorStore; // Added dependency
         this.claudeClient = claudeClient;
     }
 
@@ -53,17 +58,28 @@ public class StudentDashBoardTools {
         return examRepository.findByExamIdentifier(examIdentifier);
     }
 
-
-    @Tool(description = "CRITICAL TRIGGER: Use this tool IMMEDIATELY if the user mentions an 'uploaded file', 'document', 'PDF', 'screenshot', or if they ask a question about specific course materials, syllabuses, or data that you do not have in your chat memory. Pass a highly descriptive search query into this tool.")
+    @Tool(name = "searchDocumentDatabase", description = "Searches the document database for specific files.")
     public String searchDocumentDatabase(String query) {
-        System.out.println("🤖 OpenAI Delegated to Claude! Searching Documents for: " + query);
+        SearchRequest searchRequest = SearchRequest.builder()
+                .query(query)
+                .topK(5)
+                .build();
 
-        String response = claudeClient.prompt()
-                .user("Search the documents for: " + query + ". Extract the precise facts.")
+        List<Document> docs = vectorStore.similaritySearch(searchRequest);
+
+        if (docs.isEmpty()) {
+            return "No documents found in the database for: " + query;
+        }
+
+        StringBuilder context = new StringBuilder("Retrieved Documents:\n");
+        for (Document doc : docs) {
+            context.append(doc.getText()).append("\n---\n");
+        }
+
+        return claudeClient.prompt()
+                .user(u -> u.text("Using the following context, answer the user's question: " + query +
+                        "\n\nContext:\n" + context.toString()))
                 .call()
                 .content();
-
-        // Add a prefix so OpenAI knows this came from Claude!
-        return "CLAUDE'S DOCUMENT ANALYSIS:\n" + response;
     }
 }

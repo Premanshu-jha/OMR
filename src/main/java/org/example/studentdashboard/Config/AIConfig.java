@@ -68,9 +68,6 @@ public class AIConfig {
                 .builder()
                 .vectorStore(vectorStore)
                 .topK(5)
-                .filterExpression(new FilterExpressionBuilder()
-                        .in("contentType", "vision_extracted_page", "spreadsheet", "document")
-                        .build())
                 .build();
 
         RetrievalAugmentationAdvisor ragAdvisor = RetrievalAugmentationAdvisor.builder()

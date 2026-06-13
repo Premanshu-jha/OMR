@@ -25,7 +25,7 @@ public class ChatController {
     }
 
     @PostMapping(value = "/{userId}/stream-chat", produces = MediaType.TEXT_EVENT_STREAM_VALUE)
-    public ResponseEntity<Flux<String>> streamChat(@RequestBody Map<String,String> payload, @PathVariable String userId){
+    public ResponseEntity<Flux<Map<String, String>>> streamChat(@RequestBody Map<String,String> payload, @PathVariable String userId){
         String query = payload.get("query");
         if (query == null || query.trim().isEmpty()) {
             throw new IllegalArgumentException("Chat query cannot be empty");
