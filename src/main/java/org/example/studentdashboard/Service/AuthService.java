@@ -34,6 +34,7 @@ public class AuthService {
             otpDetails.setOtp(otp);
             otpDetails.setPhoneNumber(phoneNumber);
             otpRepository.save(otpDetails);
+            smsService.sendOtp(phoneNumber,otp);
         }
     }
 
