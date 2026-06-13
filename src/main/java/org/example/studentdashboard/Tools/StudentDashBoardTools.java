@@ -6,11 +6,13 @@ import org.example.studentdashboard.Models.StudentExam;
 import org.example.studentdashboard.Repositories.ExamRepository;
 import org.example.studentdashboard.Repositories.StudentExamRepository;
 import org.example.studentdashboard.Repositories.StudentRepository;
+import org.springframework.ai.anthropic.AnthropicChatModel;
 import org.springframework.ai.chat.client.ChatClient;
 import org.springframework.ai.document.Document; // Added missing import
 import org.springframework.ai.tool.annotation.Tool;
 import org.springframework.ai.vectorstore.SearchRequest; // Added missing import
 import org.springframework.ai.vectorstore.VectorStore; // Added missing import
+import org.springframework.ai.vectorstore.filter.FilterExpressionBuilder;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Service;
 
@@ -23,19 +25,18 @@ public class StudentDashBoardTools {
     private final StudentRepository studentRepository;
     private final StudentExamRepository studentExamRepository;
     private final ExamRepository examRepository;
-    private final VectorStore vectorStore; // Added dependency
-    private final ChatClient claudeClient;
+    private final VectorStore documentVectorStore; // Added dependency
+
 
     public StudentDashBoardTools(StudentRepository studentRepository,
                                  StudentExamRepository studentExamRepository,
                                  ExamRepository examRepository,
-                                 VectorStore vectorStore, // Added dependency
-                                 @Qualifier("anthropicChatClient") ChatClient claudeClient){
+                                 @Qualifier("documentVectorStore") VectorStore documentVectorStore, // Added dependency
+                                 AnthropicChatModel chatModel){
         this.studentRepository = studentRepository;
         this.studentExamRepository = studentExamRepository;
         this.examRepository = examRepository;
-        this.vectorStore = vectorStore; // Added dependency
-        this.claudeClient = claudeClient;
+        this.documentVectorStore = documentVectorStore; // Added dependency
     }
 
     @Tool(description = "Get basic student profile data (name, phone, city, class number) by roll number.")
@@ -63,23 +64,27 @@ public class StudentDashBoardTools {
         SearchRequest searchRequest = SearchRequest.builder()
                 .query(query)
                 .topK(5)
+                .filterExpression(new FilterExpressionBuilder()
+                        .in("contentType",
+                                "vision_extracted_page",
+                                "spreadsheet",
+                                "document"
+                        )
+                        .build())
                 .build();
 
-        List<Document> docs = vectorStore.similaritySearch(searchRequest);
-
+        List<Document> docs = documentVectorStore.similaritySearch(searchRequest);
+        System.out.println("docs: "+docs);
         if (docs.isEmpty()) {
             return "No documents found in the database for: " + query;
         }
 
-        StringBuilder context = new StringBuilder("Retrieved Documents:\n");
+        StringBuilder context = new StringBuilder("I found the following file information in the database:\n");
         for (Document doc : docs) {
-            context.append(doc.getText()).append("\n---\n");
+            String fileName = (String) doc.getMetadata().getOrDefault("fileName", "Unknown File");
+            context.append("File: ").append(fileName).append("\nContent: ").append(doc.getText()).append("\n---\n");
         }
 
-        return claudeClient.prompt()
-                .user(u -> u.text("Using the following context, answer the user's question: " + query +
-                        "\n\nContext:\n" + context.toString()))
-                .call()
-                .content();
+        return context.toString();
     }
 }

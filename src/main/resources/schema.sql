@@ -6,6 +6,20 @@ CREATE TABLE IF NOT EXISTS spring_ai_chat_memory (
     "timestamp" TIMESTAMP NOT NULL
 );
 
+-- Ensure the vector extension is enabled
+CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
+CREATE EXTENSION IF NOT EXISTS vector;
+
+CREATE TABLE IF NOT EXISTS document_store (
+    id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
+    content TEXT,
+    metadata JSONB,
+    embedding VECTOR(1536) -- Adjust dimensions based on your embedding model
+);
+
+CREATE INDEX IF NOT EXISTS document_store_hnsw_idx
+    ON document_store USING hnsw (embedding vector_cosine_ops);
+
 CREATE TABLE IF NOT EXISTS chat_memory_archive (
                 id SERIAL PRIMARY KEY,
                 conversation_id VARCHAR(255) NOT NULL,
