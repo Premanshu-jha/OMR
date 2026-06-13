@@ -43,7 +43,7 @@ public class ChatService {
                 .entity(ChatResponse.class);
     }
 
-    public Flux<String> streamChat(String q, String userId){
+    public Flux<Map<String,String>> streamChat(String q, String userId){
         janitorService.checkAndSummarize(userId);
 
         // Let OpenAI handle the conversation. If it needs documents, it will trigger the Claude tool!
@@ -51,7 +51,8 @@ public class ChatService {
                 .user(q)
                 .advisors(a -> a.param(ChatMemory.CONVERSATION_ID, userId))
                 .stream()
-                .content();
+                .content()
+                .map(chunk -> Map.of("text",chunk));
     }
 
     public List<Map<String,Object>> getChatHistory(String userId){
