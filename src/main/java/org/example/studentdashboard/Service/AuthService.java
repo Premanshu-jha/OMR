@@ -28,7 +28,7 @@ public class AuthService {
         String rollNumber = otpDetails.getRollNo();
         if(rollNumber == null) throw new RuntimeException("Please enter your roll number!");
         Student student = studentRepository.findByRollNo(rollNumber).orElseThrow(()->new RuntimeException("Invalid User!"));
-        if(!student.getSmsOtpByPass()){
+        if(!Boolean.TRUE.equals(student.getSmsOtpByPass())){
             String phoneNumber = student.getPhone();
             String otp = String.format("%04d",new SecureRandom().nextInt(10000));
             otpDetails.setOtp(otp);
@@ -39,7 +39,7 @@ public class AuthService {
 
     public String verifyOtp(OtpDetails reqOtp) {
         Student student = studentRepository.findByRollNo(reqOtp.getRollNo()).orElseThrow(() -> new RuntimeException("Invalid User!"));
-        if (student.getSmsOtpByPass()) {
+        if (Boolean.TRUE.equals(student.getSmsOtpByPass())) {
             return jwtService.createToken(student);
         } else {
             String phoneNumber = student.getPhone();
