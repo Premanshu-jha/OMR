@@ -11,6 +11,7 @@ import org.springframework.ai.content.Media;
 import org.springframework.ai.reader.tika.TikaDocumentReader;
 import org.springframework.ai.transformer.splitter.TokenTextSplitter;
 import org.springframework.ai.vectorstore.VectorStore;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.core.io.ByteArrayResource;
 import org.springframework.core.io.InputStreamResource;
 import org.springframework.jdbc.core.JdbcTemplate;
@@ -30,19 +31,19 @@ import java.util.Objects;
 @Service
 public class UniversalIngestionService {
 
-    private final VectorStore vectorStore;
+    private final VectorStore documentVectorStore;
     private final ChatClient visionClient;
     private final JdbcTemplate jdbcTemplate;
 
-    public UniversalIngestionService(VectorStore vectorStore, AnthropicChatModel chatModel, JdbcTemplate jdbcTemplate) {
-        this.vectorStore = vectorStore;
+    public UniversalIngestionService(@Qualifier("documentVectorStore") VectorStore documentVectorStore, AnthropicChatModel chatModel, JdbcTemplate jdbcTemplate) {
+        this.documentVectorStore = documentVectorStore;
         this.visionClient = ChatClient.builder(chatModel).build();
         this.jdbcTemplate = jdbcTemplate;
     }
 
     public void verifyVectorCommit(String fileName) {
         System.out.println("Verifying database commit for: " + fileName);
-        String sql = "SELECT COUNT(*) FROM vector_store WHERE metadata->>'fileName' = ?";
+        String sql = "SELECT COUNT(*) FROM document_store WHERE metadata->>'fileName' = ?";
 
         for (int i = 0; i < 15; i++) {
             Integer count = jdbcTemplate.queryForObject(sql, Integer.class, fileName);
@@ -57,7 +58,7 @@ public class UniversalIngestionService {
 
     private void safeAdd(List<Document> docs, String fileName) {
         try {
-            vectorStore.add(docs);
+            documentVectorStore.add(docs);
         } catch (Exception e) {
             throw new RuntimeException("CRITICAL: Failed to write to VectorStore: " + e.getMessage(), e);
         }
