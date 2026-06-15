@@ -46,6 +46,7 @@ public class SecurityConfig {
         configuration.setAllowedOrigins(List.of("https://vidyavriti-post-exam-production.up.railway.app","http://localhost:5173"));
         configuration.setAllowedMethods(List.of("GET", "POST", "PUT", "PATCH","DELETE", "OPTIONS"));
         configuration.setAllowedHeaders(List.of("Authorization", "Content-Type", "Cache-Control"));
+        configuration.setExposedHeaders(List.of("Content-Disposition", "Content-Type", "Authorization"));
         configuration.setAllowCredentials(true);
 
         UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
