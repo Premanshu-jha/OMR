@@ -14,6 +14,8 @@ import org.springframework.ai.vectorstore.SearchRequest; // Added missing import
 import org.springframework.ai.vectorstore.VectorStore; // Added missing import
 import org.springframework.ai.vectorstore.filter.FilterExpressionBuilder;
 import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -57,6 +59,46 @@ public class StudentDashBoardTools {
     @Tool(description = "Get total possible marks and global stats for a specific exam by its identifier.")
     public Optional<Exam> getExamMetaData(String examIdentifier){
         return examRepository.findByExamIdentifier(examIdentifier);
+    }
+
+    @Tool(description = "Get a list of all StudentExams for a specific exam identifier. Useful for comparison.")
+    public List<StudentExam> getAllPerformanceForExam(String examIdentifier) {
+        return studentExamRepository.findByExam_ExamIdentifier(examIdentifier);
+    }
+
+    @Tool(description = "Get a summary of top N performers for a subject (physics, maths, chemistry) or total marks across all exams.")
+    public String getTopPerformersBySubject(String subject, int limit) {
+        if (limit > 100) limit = 100;
+        Pageable page = PageRequest.of(0, limit);
+        List<StudentExam> results;
+        String subjectKey = (subject == null) ? "total" : subject.toLowerCase();
+
+        switch (subjectKey) {
+            case "physics" -> results = studentExamRepository.findTopByPhysicsMarksDesc(page);
+            case "maths" -> results = studentExamRepository.findTopByMathsMarksDesc(page);
+            case "chemistry" -> results = studentExamRepository.findTopByChemistryMarksDesc(page);
+            case "total" -> results = studentExamRepository.findTopMarksDesc(page);
+            default -> {
+                return "Subject not recognized. Choose 'physics', 'maths', 'chemistry', or omit for 'total'.";
+            }
+        }
+
+        if (results.isEmpty()) return "No records found.";
+
+        StringBuilder sb = new StringBuilder("Top " + limit + " performers in " + subjectKey + ":\n");
+        for (StudentExam se : results) {
+            int score = switch (subjectKey) {
+                case "physics" -> se.getPhysicsMarksScored();
+                case "maths" -> se.getMathsMarksScored();
+                case "chemistry" -> se.getChemistryMarksScored();
+                case "total" -> se.getTotalMarks();
+                default -> 0;
+            };
+            sb.append("- ").append(se.getStudent().getName())
+                    .append(" (Exam: ").append(se.getExam().getExamIdentifier())
+                    .append(") Score: ").append(score).append("\n");
+        }
+        return sb.toString();
     }
 
     @Tool(name = "searchDocumentDatabase", description = "Searches the document database for specific files.")
