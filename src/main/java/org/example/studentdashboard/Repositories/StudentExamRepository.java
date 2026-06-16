@@ -4,6 +4,7 @@ import org.example.studentdashboard.Models.StudentExam;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Query;
 
 import java.util.List;
 
@@ -19,5 +20,18 @@ public interface StudentExamRepository extends JpaRepository<StudentExam,Long> {
 
     public Page<StudentExam> findByExam_IdAndStudent_NameContainingIgnoreCase(Long examId,String name,Pageable pageable);
 
+    public List<StudentExam> findByExam_ExamIdentifier(String examIdentifier);
+
+    @Query("SELECT se FROM StudentExam se ORDER BY se.physicsMarksScored DESC")
+    public List<StudentExam> findTopByPhysicsMarksDesc(Pageable pageable);
+
+    @Query("SELECT se FROM StudentExam se ORDER BY se.mathsMarksScored DESC")
+    public List<StudentExam> findTopByMathsMarksDesc(Pageable pageable);
+
+    @Query("SELECT se FROM StudentExam se ORDER BY se.chemistryMarksScored DESC")
+    public List<StudentExam> findTopByChemistryMarksDesc(Pageable pageable);
+
+    @Query("SELECT se FROM StudentExam se ORDER BY se.totalMarks DESC")
+    public List<StudentExam> findTopMarksDesc(Pageable pageable);
 
 }
