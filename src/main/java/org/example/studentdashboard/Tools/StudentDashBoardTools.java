@@ -7,11 +7,10 @@ import org.example.studentdashboard.Repositories.ExamRepository;
 import org.example.studentdashboard.Repositories.StudentExamRepository;
 import org.example.studentdashboard.Repositories.StudentRepository;
 import org.springframework.ai.anthropic.AnthropicChatModel;
-import org.springframework.ai.chat.client.ChatClient;
-import org.springframework.ai.document.Document; // Added missing import
+import org.springframework.ai.document.Document;
 import org.springframework.ai.tool.annotation.Tool;
-import org.springframework.ai.vectorstore.SearchRequest; // Added missing import
-import org.springframework.ai.vectorstore.VectorStore; // Added missing import
+import org.springframework.ai.vectorstore.SearchRequest;
+import org.springframework.ai.vectorstore.VectorStore;
 import org.springframework.ai.vectorstore.filter.FilterExpressionBuilder;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.data.domain.PageRequest;
@@ -27,46 +26,45 @@ public class StudentDashBoardTools {
     private final StudentRepository studentRepository;
     private final StudentExamRepository studentExamRepository;
     private final ExamRepository examRepository;
-    private final VectorStore documentVectorStore; // Added dependency
-
+    private final VectorStore documentVectorStore;
 
     public StudentDashBoardTools(StudentRepository studentRepository,
                                  StudentExamRepository studentExamRepository,
                                  ExamRepository examRepository,
-                                 @Qualifier("documentVectorStore") VectorStore documentVectorStore, // Added dependency
+                                 @Qualifier("documentVectorStore") VectorStore documentVectorStore,
                                  AnthropicChatModel chatModel){
         this.studentRepository = studentRepository;
         this.studentExamRepository = studentExamRepository;
         this.examRepository = examRepository;
-        this.documentVectorStore = documentVectorStore; // Added dependency
+        this.documentVectorStore = documentVectorStore;
     }
 
-    @Tool(description = "Get basic student profile data (name, phone, city, class number) by roll number.")
+    @Tool(description = "Call this to retrieve personal details like name, phone, city, or class for a specific student using their roll number.")
     public Optional<Student> getStudentProfile(String rollNo){
         return studentRepository.findByRollNo(rollNo);
     }
 
-    @Tool(description = "Get detailed exam performance, subject marks, and time spent for a student, by roll number.")
+    @Tool(description = "Call this to retrieve detailed subject marks, exam scores, and time metrics for a student when provided a roll number.")
     public List<StudentExam> getStudentPerformanceMetrics(String rollNo){
         return studentExamRepository.findByStudent_RollNo(rollNo);
     }
 
-    @Tool(description = "Find students by name and return matching roll numbers.")
+    @Tool(description = "Call this to resolve a student's name into their unique roll number. Useful when the user provides a name instead of an ID.")
     public List<Student> findStudentsByName(String name){
         return studentRepository.findByNameContainingIgnoreCase(name);
     }
 
-    @Tool(description = "Get total possible marks and global stats for a specific exam by its identifier.")
+    @Tool(description = "Call this to get global exam statistics, total possible marks, or metadata when given an exam identifier.")
     public Optional<Exam> getExamMetaData(String examIdentifier){
         return examRepository.findByExamIdentifier(examIdentifier);
     }
 
-    @Tool(description = "Get a list of all StudentExams for a specific exam identifier. Useful for comparison.")
+    @Tool(description = "Call this to compare a student's performance against the entire class for a specific exam identifier.")
     public List<StudentExam> getAllPerformanceForExam(String examIdentifier) {
         return studentExamRepository.findByExam_ExamIdentifier(examIdentifier);
     }
 
-    @Tool(description = "Get a summary of top N performers for a subject (physics, maths, chemistry) or total marks across all exams.")
+    @Tool(description = "Call this to answer questions about rankings or top students. Specify the subject ('physics', 'maths', 'chemistry') or leave null for total aggregate marks.")
     public String getTopPerformersBySubject(String subject, int limit) {
         if (limit > 100) limit = 100;
         Pageable page = PageRequest.of(0, limit);
@@ -101,24 +99,25 @@ public class StudentDashBoardTools {
         return sb.toString();
     }
 
-    @Tool(name = "searchDocumentDatabase", description = "Searches the document database for specific files.")
+    @Tool(name = "searchDocumentDatabase", description = "Call this for ANY question about uploaded files, exam papers, instructions, diagrams, or textual content from PDFs/Excel files. Use this if the user asks about the content of a file.")
     public String searchDocumentDatabase(String query) {
         SearchRequest searchRequest = SearchRequest.builder()
                 .query(query)
-                .topK(5)
+                .topK(10)
                 .filterExpression(new FilterExpressionBuilder()
                         .in("contentType",
                                 "vision_extracted_page",
                                 "spreadsheet",
-                                "document"
+                                "document",
+                                "application/pdf"
                         )
                         .build())
                 .build();
 
         List<Document> docs = documentVectorStore.similaritySearch(searchRequest);
-        System.out.println("docs: "+docs);
+
         if (docs.isEmpty()) {
-            return "No documents found in the database for: " + query;
+            return "No documents found in the database. Please verify the file was uploaded correctly.";
         }
 
         StringBuilder context = new StringBuilder("I found the following file information in the database:\n");

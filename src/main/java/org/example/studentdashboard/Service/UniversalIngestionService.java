@@ -3,6 +3,7 @@ package org.example.studentdashboard.Service;
 import com.github.pjfanning.xlsx.StreamingReader;
 import org.apache.pdfbox.pdmodel.PDDocument;
 import org.apache.pdfbox.rendering.PDFRenderer;
+import org.apache.pdfbox.text.PDFTextStripper;
 import org.apache.poi.ss.usermodel.*;
 import org.springframework.ai.anthropic.AnthropicChatModel;
 import org.springframework.ai.document.Document;
@@ -26,7 +27,6 @@ import java.io.ByteArrayOutputStream;
 import java.io.InputStreamReader;
 import java.util.List;
 import java.util.Map;
-import java.util.Objects;
 
 @Service
 public class UniversalIngestionService {
@@ -68,9 +68,15 @@ public class UniversalIngestionService {
         String contentType = file.getContentType();
         String fileName = file.getOriginalFilename();
 
+        System.out.println("contentType: "+contentType);
+
+        if (fileName == null || fileName.endsWith(".crdownload")) {
+            throw new RuntimeException("UPLOAD BLOCKED: File is incomplete (partial download).");
+        }
+
         if (contentType == null) throw new RuntimeException("Illegal file format!");
 
-        if (contentType.equals("application/pdf")) processPdfWithVision(file);
+        if (contentType.equals("application/pdf")) processPdfHybrid(file);
         else if (contentType.contains("spreadsheetml") || contentType.contains("excel")) processExcel(file);
         else if (contentType.startsWith("image/")) processRawImage(file.getBytes(), fileName, contentType);
         else if (contentType.equals("text/csv")) processCsv(file);
@@ -79,16 +85,39 @@ public class UniversalIngestionService {
         verifyVectorCommit(fileName);
     }
 
-    private void processPdfWithVision(MultipartFile file) throws Exception {
+    // Hybrid approach: Fast text-first, intelligent Vision fallback
+    private void processPdfHybrid(MultipartFile file) throws Exception {
+        TokenTextSplitter splitter = new TokenTextSplitter();
+
         try (PDDocument document = PDDocument.load(file.getInputStream())) {
+            PDFTextStripper stripper = new PDFTextStripper();
             PDFRenderer renderer = new PDFRenderer(document);
+
             for (int page = 0; page < document.getNumberOfPages(); page++) {
-                BufferedImage image = renderer.renderImageWithDPI(page, 300);
-                ByteArrayOutputStream bios = new ByteArrayOutputStream();
-                ImageIO.write(image, "png", bios);
-                processRawImage(bios.toByteArray(), file.getOriginalFilename() + "_page_" + (page + 1), "image/png");
+                stripper.setStartPage(page + 1);
+                stripper.setEndPage(page + 1);
+                String pageText = stripper.getText(document).trim();
+
+                // Adaptive Decision: If text is sparse or highly symbolic, use Vision.
+                if (pageText.length() < 100 || isGibberish(pageText)) {
+                    System.out.println("Page " + (page + 1) + " is visual/sparse, switching to Vision.");
+                    BufferedImage image = renderer.renderImageWithDPI(page, 200);
+                    ByteArrayOutputStream bios = new ByteArrayOutputStream();
+                    ImageIO.write(image, "png", bios);
+                    processRawImage(bios.toByteArray(), file.getOriginalFilename() + "_page_" + (page + 1), "image/png");
+                } else {
+                    System.out.println("pageText: " + pageText);
+                    Document textDoc = new Document("Source: " + file.getOriginalFilename() + "\nPage: " + (page + 1) + "\n\n" + pageText,
+                            Map.of("fileName", file.getOriginalFilename(), "contentType", "document"));
+                    safeAdd(splitter.apply(List.of(textDoc)), file.getOriginalFilename());
+                }
             }
         }
+    }
+
+    private boolean isGibberish(String text) {
+        long specialCharCount = text.chars().filter(ch -> !Character.isLetterOrDigit(ch) && !Character.isWhitespace(ch)).count();
+        return (double) specialCharCount / text.length() > 0.3;
     }
 
     private void processRawImage(byte[] imageBytes, String fileName, String mimeType) {
