@@ -77,6 +77,25 @@ public class StudentService {
         studentRepository.save(existingStudent);
     }
 
+    public void putStudent(Student student, Long id) {
+        // 1. Fetch existing student
+        Student existingStudent = studentRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("No student with the given id exist!"));
+
+        // 2. Map all fields directly (PUT replaces the entire resource)
+        // If a field is null in the incoming 'student' object, it will be set to null in the DB.
+        existingStudent.setRollNo(student.getRollNo());
+        existingStudent.setName(student.getName());
+        existingStudent.setPhone(student.getPhone());
+        existingStudent.setCity(student.getCity());
+        existingStudent.setClassNum(student.getClassNum());
+        existingStudent.setRole(student.getRole());
+        existingStudent.setSmsOtpByPass(student.getSmsOtpByPass());
+
+        // 3. Save the updated resource
+        studentRepository.save(existingStudent);
+    }
+
     @Transactional
     public List<StudentExam> getStudentReport(Long id){
        Student student = studentRepository.findById(id).orElseThrow(()-> new RuntimeException("Student not found with given id!"));
