@@ -83,8 +83,7 @@ public class ChatService {
         return fileRes;
     }
 
-    public void chatDeleteFile(MultipartFile file,String fileId){
-        String fileName = file.getOriginalFilename();
+    public void chatDeleteFile(String fileName,String fileId){
         Filter.Expression filter = new FilterExpressionBuilder().eq("fileName",fileName).build();
         documentVectorStore.delete(filter);
         fileService.deleteFile(fileId);
