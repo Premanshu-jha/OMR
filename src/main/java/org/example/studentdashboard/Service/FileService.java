@@ -1,5 +1,4 @@
 package org.example.studentdashboard.Service;
-import com.mongodb.client.gridfs.GridFSFindIterable;
 import com.mongodb.client.gridfs.model.GridFSFile;
 import com.opencsv.bean.CsvToBean;
 import com.opencsv.bean.CsvToBeanBuilder;
@@ -228,35 +227,22 @@ public class FileService {
          }
     }
 
-    public GridFSFile getExamResultFile(String examType,String examIdentifier){
-        Query query = new Query().with(Sort.by(Sort.Direction.DESC,"uploadDate"));
-        GridFSFindIterable iterable = gridFsTemplate.find(query);
-        for(GridFSFile file:iterable) {
-            if (file.getFilename().contains("exam_results") && examType.equals(getMetaInfo("examType",file)) &&
-                    examIdentifier.equals(getMetaInfo("examIdentifier",file))) {
-                return file;
-            }
-        }
-        throw new RuntimeException("No file with exam_results name found!");
-    }
-
     public String getExamIdentifier(String fileName){
         if(fileName.contains("exam_results_")) {
-            return fileName.replace("exam_results_", "").replace(".csv", "")
+            return fileName.replace(".csv", "")
                     .replaceAll("\\s?\\(\\d+\\)", "").trim();
         }
         return null;
     }
 
 
-    public ExamResults getExamResults(String examType,String examIdentifier) throws IOException {
-                GridFSFile examFile = getExamResultFile(examType,examIdentifier);
-                GridFsResource gridFsResource = gridFsTemplate.getResource(examFile);
-                List<StudentData> list = processCsvFile(gridFsResource.getInputStream());
+    public ExamResults getExamResults(MultipartFile file) throws IOException {
+
+                List<StudentData> list = processCsvFile(file.getInputStream());
                 if(list.size() > 0) {
                     ExamResults examResults = new ExamResults();
                     examResults.setStudentData(list);
-                    examResults.setExamIdentifier(getExamIdentifier(examFile.getFilename()));
+                    examResults.setExamIdentifier(getExamIdentifier(file.getOriginalFilename()));
 
                     Integer physicsTotalMarks = list.get(0).getPhysicsTotalMarks();
                     Integer physicsTotalQuestions = list.get(0).getPhysicsTotalQuestions();
@@ -284,7 +270,7 @@ public class FileService {
         }
 
     @Transactional
-    public void bulkPushFileData(String examType,String examIdentifier) throws IOException {
+    public void bulkPushFileData(MultipartFile file,String examType) throws IOException {
         Map<String,Long> studentMap = new HashMap<>();
         studentRepository.findAll().forEach(student -> {
             String rollNo = student.getRollNo();
@@ -292,7 +278,7 @@ public class FileService {
                  studentMap.put(rollNo,student.getId());
         });
 
-        ExamResults examResults = getExamResults(examType,examIdentifier);
+        ExamResults examResults = getExamResults(file);
         Optional<Exam> optionalExam = examRepository.findByExamIdentifier(examResults.getExamIdentifier());
         if(optionalExam.isPresent()) throw new RuntimeException("Records allready present for this exam!");
         else{

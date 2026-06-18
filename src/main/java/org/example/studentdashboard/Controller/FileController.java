@@ -54,14 +54,14 @@ public class FileController {
          return fileService.getDownloadStatus(id);
     }
 
-    @GetMapping("/{examType}/{examIdentifier}/exam-results")
-    public ExamResults getExamResults(@PathVariable String examType,@PathVariable String examIdentifier) throws IOException {
-         return fileService.getExamResults(examType,examIdentifier);
+    @GetMapping("/exam-results")
+    public ExamResults getExamResults(@RequestParam("file") MultipartFile file) throws IOException {
+         return fileService.getExamResults(file);
     }
 
-    @PostMapping("/{examType}/{examIdentifier}/bulk-update")
-    public ResponseEntity<String> bulkUpdate(@PathVariable String examType,@PathVariable String examIdentifier) throws IOException {
-        fileService.bulkPushFileData(examType,examIdentifier);
+    @PostMapping("/{examType}/bulk-update")
+    public ResponseEntity<String> bulkUpdate(@RequestParam("file") MultipartFile file,@PathVariable String examType) throws IOException {
+        fileService.bulkPushFileData(file,examType);
         return ResponseEntity.ok("File records pushed succesfully!");
     }
 
