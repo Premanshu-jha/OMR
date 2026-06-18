@@ -1,6 +1,7 @@
 package org.example.studentdashboard.Controller;
 
 import org.example.studentdashboard.Models.ChatResponse;
+import org.example.studentdashboard.Models.FileResponse;
 import org.example.studentdashboard.Service.ChatService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.MediaType;
@@ -39,8 +40,13 @@ public class ChatController {
     }
 
     @PostMapping("/upload")
-    public void uploadFile(@RequestParam("file") MultipartFile file, @RequestParam(required = false) String rollNumber) throws Exception {
-        chatService.chatUploadFile(file, rollNumber);
+    public FileResponse uploadFile(@RequestParam("file") MultipartFile file, @RequestParam(required = false) String rollNumber) throws Exception {
+        return chatService.chatUploadFile(file, rollNumber);
+    }
+
+    @DeleteMapping("/delete/{fileId}")
+    public void deleteFile(@RequestParam("file") MultipartFile file,@RequestParam String fileId){
+         chatService.chatDeleteFile(file,fileId);
     }
 
 }

@@ -1,8 +1,12 @@
 package org.example.studentdashboard.Service;
 
 import org.example.studentdashboard.Models.ChatResponse;
+import org.example.studentdashboard.Models.FileResponse;
 import org.springframework.ai.chat.client.ChatClient;
 import org.springframework.ai.chat.memory.ChatMemory;
+import org.springframework.ai.vectorstore.VectorStore;
+import org.springframework.ai.vectorstore.filter.Filter;
+import org.springframework.ai.vectorstore.filter.FilterExpressionBuilder;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.stereotype.Service;
@@ -21,17 +25,20 @@ public class ChatService {
     private final JdbcTemplate jdbcTemplate;
     private final FileService fileService;
     private final UniversalIngestionService universalIngestionService;
+    private VectorStore documentVectorStore;
 
     public ChatService(@Qualifier("openAiChatClient") ChatClient openAiClient,
                        MemoryJanitorService janitorService,
                        JdbcTemplate jdbcTemplate,
                        FileService fileService,
-                       UniversalIngestionService universalIngestionService){
+                       UniversalIngestionService universalIngestionService,
+                       @Qualifier("documentVectorStore") VectorStore documentVectorStore){
         this.openAiClient = openAiClient;
         this.janitorService = janitorService;
         this.jdbcTemplate = jdbcTemplate;
         this.fileService = fileService;
         this.universalIngestionService = universalIngestionService;
+        this.documentVectorStore = documentVectorStore;
     }
 
     public ChatResponse chat(String q,String userId) {
@@ -70,8 +77,16 @@ public class ChatService {
         return jdbcTemplate.queryForList(sql, userId, userId);
     }
 
-    public void chatUploadFile(MultipartFile file, String rollNumber) throws Exception {
-        fileService.uploadFile(file, null, rollNumber);
+    public FileResponse chatUploadFile(MultipartFile file, String rollNumber) throws Exception {
+        FileResponse fileRes = fileService.uploadFile(file, null, rollNumber);
         universalIngestionService.ingestFile(file);
+        return fileRes;
+    }
+
+    public void chatDeleteFile(MultipartFile file,String fileId){
+        String fileName = file.getOriginalFilename();
+        Filter.Expression filter = new FilterExpressionBuilder().eq("fileName",fileName).build();
+        documentVectorStore.delete(filter);
+        fileService.deleteFile(fileId);
     }
 }
