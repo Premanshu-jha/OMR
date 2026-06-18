@@ -40,6 +40,11 @@ public class StudentController {
          studentService.postStudent(student);
     }
 
+    @PutMapping("/{id}")
+    public void updateStudent(@RequestBody Student student, @PathVariable Long id) {
+        studentService.putStudent(student, id);
+    }
+
     @PatchMapping("/{id}")
     public void patchStudent(@RequestBody Student student,@PathVariable Long id){
          studentService.patchStudent(student,id);
