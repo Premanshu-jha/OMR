@@ -1,6 +1,8 @@
 package org.example.studentdashboard.CSVModels;
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import lombok.Data;
 
+@JsonIgnoreProperties(ignoreUnknown = true)
 @Data
 public class StudentData {
 
