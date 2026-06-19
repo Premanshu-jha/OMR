@@ -54,10 +54,6 @@ public class FileController {
          return fileService.getDownloadStatus(id);
     }
 
-    @GetMapping("/exam-results")
-    public ExamResults getExamResults(@RequestParam("file") MultipartFile file) throws IOException {
-         return fileService.getExamResults(file);
-    }
 
     @PostMapping("/{examType}/bulk-update")
     public ResponseEntity<String> bulkUpdate(@RequestParam("file") MultipartFile file,@PathVariable String examType) throws IOException {
