@@ -229,7 +229,7 @@ public class FileService {
                 d.setTotalWrongAnswers(getInt(cols, "totalWrongAnswers"));
                 d.setTotalPositiveMarks(getInt(cols, "totalPositiveMarks"));
                 d.setTotalNegativeMarks(getInt(cols, "totalNegativeMarks"));
-                d.setTotalMarks(getInt(cols, "totalMarks"));
+                d.setTotalMarks(getInt(cols, "totalMarksScored"));
                 d.setTotalTimeSpent(get(cols, "totalTotalTimeSpent"));
                 d.setAvgTimeEachQuestion(get(cols, "totalAvgTimeEachQuestion"));
                 d.setRank(getLong(cols, "rank"));
