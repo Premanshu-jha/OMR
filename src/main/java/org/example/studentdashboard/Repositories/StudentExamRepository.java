@@ -31,7 +31,7 @@ public interface StudentExamRepository extends JpaRepository<StudentExam,Long> {
     @Query("SELECT se FROM StudentExam se ORDER BY se.chemistryMarksScored DESC")
     public List<StudentExam> findTopByChemistryMarksDesc(Pageable pageable);
 
-    @Query("SELECT se FROM StudentExam se ORDER BY se.totalMarks DESC")
+    @Query("SELECT se FROM StudentExam se ORDER BY se.totalMarksScored DESC")
     public List<StudentExam> findTopMarksDesc(Pageable pageable);
 
 }
