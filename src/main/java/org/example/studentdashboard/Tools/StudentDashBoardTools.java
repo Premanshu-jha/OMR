@@ -89,7 +89,7 @@ public class StudentDashBoardTools {
                 case "physics" -> se.getPhysicsMarksScored();
                 case "maths" -> se.getMathsMarksScored();
                 case "chemistry" -> se.getChemistryMarksScored();
-                case "total" -> se.getTotalMarks();
+                case "total" -> se.getTotalMarksScored();
                 default -> 0;
             };
             sb.append("- ").append(se.getStudent().getName())
