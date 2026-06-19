@@ -88,7 +88,7 @@ public class FileService {
               "mathsWrongAnswers":            header containing "MATHS" + "Wrong",
               "mathsPositiveMarks":           header containing "MATHS" + "Positive",
               "mathsNegativeMarks":           header containing "MATHS" + "Negative",
-              "mathsTotalMarks":              header containing "MATHS" + "Total Marks",
+              "mathsMarksScored":             header containing "MATHS" + "Total Marks",
               "mathsTotalTimeSpent":          header containing "MATHS" + "Total Time",
               "mathsAvgTimeEachQuestion":     header containing "MATHS" + "Avg Time",
               "mathsRank":                    RANK column immediately after MATHS section,
@@ -98,7 +98,7 @@ public class FileService {
               "physicsWrongAnswers":          header containing "PHYSICS" + "Wrong",
               "physicsPositiveMarks":         header containing "PHYSICS" + "Positive",
               "physicsNegativeMarks":         header containing "PHYSICS" + "Negative",
-              "physicsTotalMarks":            header containing "PHYSICS" + "Total Marks",
+              "physicsMarksScored":           header containing "PHYSICS" + "Total Marks",
               "physicsTotalTimeSpent":        header containing "PHYSICS" + "Total Time",
               "physicsAvgTimeEachQuestion":   header containing "PHYSICS" + "Avg Time",
               "physicsRank":                  RANK column immediately after PHYSICS section,
@@ -108,7 +108,7 @@ public class FileService {
               "chemistryWrongAnswers":        header containing "CHEMISTRY" + "Wrong",
               "chemistryPositiveMarks":       header containing "CHEMISTRY" + "Positive",
               "chemistryNegativeMarks":       header containing "CHEMISTRY" + "Negative",
-              "chemistryTotalMarks":          header containing "CHEMISTRY" + "Total Marks",
+              "chemistryMarksScored":         header containing "CHEMISTRY" + "Total Marks",
               "chemistryTotalTimeSpent":      header containing "CHEMISTRY" + "Total Time",
               "chemistryAvgTimeEachQuestion": header containing "CHEMISTRY" + "Avg Time",
               "chemistryRank":                RANK column immediately after CHEMISTRY section,
@@ -123,11 +123,16 @@ public class FileService {
               "avgTimeEachQuestion":          header containing "TOTAL" + "Avg Time",
               "rank":                         RANK column immediately after TOTAL section,
               "questionsIncorrect":           header like "Qs Incorrect",
-              "questionsNotAttempted":        header like "Qs Not Attempted"
+              "questionsNotAttempted":        header like "Qs Not Attempted",
+              "timeOutside":   header like "TIME OUTSIDE",
+              "examStartTime": header like "EXAM STARTED AT",
+              "examEndTime":   header like "EXAM ENDED AT"
             }
             - For duplicate RANK headers, assign by which subject section they appear after
             - Only include rows where rollNo is purely numeric
             - For empty values use null
+            - IGNORE all columns after "Qs Not Attempted" and "INACTIVE Student"
+            - There will be hundreds of extra columns after — skip all of them completely
             """;
 
 
@@ -280,31 +285,6 @@ public class FileService {
 
     }
 
-    public List<StudentData> processCsvFile(InputStream inputStream){
-
-        try(Reader reader = new BufferedReader(new InputStreamReader(inputStream))){
-            CSVParser parser = new CSVParserBuilder().withSeparator(';').build();
-            CSVReader csvReader = new CSVReaderBuilder(reader)
-                    .withCSVParser(parser)
-                    .build();
-            CsvToBean<StudentData> csvToBean = new CsvToBeanBuilder<StudentData>(csvReader)
-                    .withType(StudentData.class)
-                    .withIgnoreLeadingWhiteSpace(true)
-                    .build();
-
-            List<StudentData> list = new ArrayList<>();
-            for(StudentData studentData:csvToBean){
-                String id = studentData.getRollNo();
-                if(id.matches("[0-9]+")) list.add(studentData);
-                else break;
-            }
-           return list;
-        }
-         catch (Exception e){
-            e.printStackTrace();
-             throw new RuntimeException("Error in processing csv file!");
-         }
-    }
 
     public String getExamIdentifier(String fileName){
 
@@ -336,6 +316,28 @@ public class FileService {
             }
         }
         return Collections.emptyList();
+    }
+
+    private Integer extractTotalMarks(String headerLine, String subject) {
+        char sep = detectSeparator(headerLine);
+        return Arrays.stream(headerLine.split(String.valueOf(sep)))
+                .filter(h -> h.contains(subject) && h.contains("Total Marks"))
+                .flatMap(h -> Arrays.stream(h.trim().split("\\s+")))
+                .filter(w -> w.matches("[0-9]+"))
+                .findFirst()
+                .map(Integer::parseInt)
+                .orElse(null);
+    }
+
+    private Integer extractTotalStudents(String headerLine) {
+        char sep = detectSeparator(headerLine);
+        return Arrays.stream(headerLine.split(String.valueOf(sep)))
+                .filter(h -> h.contains("RANK"))
+                .flatMap(h -> Arrays.stream(h.trim().split("\\s+")))
+                .filter(w -> w.matches("[0-9]+"))
+                .findFirst()
+                .map(Integer::parseInt)
+                .orElse(null);
     }
 
     private void saveBatch(List<StudentData> batch, Long examId, Map<String, Long> studentMap) {
@@ -435,35 +437,28 @@ public class FileService {
         String headerLine = reader.readLine();
         char separator = detectSeparator(headerLine);
 
-        // 4. Parse first line with Claude to get exam meta (total marks)
-        String firstDataLine = reader.readLine();
-        if (firstDataLine == null) throw new RuntimeException("No students found!");
-
-        List<StudentData> firstParsed = parseChunkWithClaude(
-                headerLine + "\n" + firstDataLine, separator);
-        if (firstParsed.isEmpty()) throw new RuntimeException("Could not parse student data!");
-
-        StudentData firstStudent = firstParsed.get(0);
-
+        Integer physicsMarks   = extractTotalMarks(headerLine, "PHYSICS");
+        Integer mathsMarks     = extractTotalMarks(headerLine, "MATHS");
+        Integer chemistryMarks = extractTotalMarks(headerLine, "CHEMISTRY");
+        Integer totalStudentsFromHeader = extractTotalStudents(headerLine);
         // 5. Save Exam entity
         Exam exam = Exam.builder()
                 .examType(examType)
                 .examIdentifier(examIdentifier)
-                .physicsTotalMarks(firstStudent.getPhysicsTotalMarks())
-                .mathsTotalMarks(firstStudent.getMathsTotalMarks())
-                .chemistryTotalMarks(firstStudent.getChemistryTotalMarks())
-                .examTotalMarks(
-                        firstStudent.getPhysicsTotalMarks() +
-                                firstStudent.getMathsTotalMarks() +
-                                firstStudent.getChemistryTotalMarks()
+                .physicsTotalMarks(physicsMarks)
+                .mathsTotalMarks(mathsMarks)
+                .chemistryTotalMarks(chemistryMarks)
+                .examTotalMarks(physicsMarks +
+                                mathsMarks +
+                                chemistryMarks
                 )
+                .totalStudentsAttempted(totalStudentsFromHeader)
                 .build();
         Long examId = examRepository.save(exam).getId();
 
         // 6. Seed batch with first parsed student, continue reading rest
         List<String> csvChunk = new ArrayList<>();
-        List<StudentData> studentBatch = new ArrayList<>(firstParsed);
-        int totalStudents = firstParsed.size();
+        List<StudentData> studentBatch = new ArrayList<>();
 
         String line;
         while ((line = reader.readLine()) != null) {
@@ -473,13 +468,9 @@ public class FileService {
                 List<StudentData> parsed = parseChunkWithClaude(
                         headerLine + "\n" + String.join("\n", csvChunk), separator);
                 studentBatch.addAll(parsed);
-                totalStudents += parsed.size();
                 csvChunk.clear();
-
-                if (studentBatch.size() >= CHUNK_SIZE) {
-                    saveBatch(studentBatch, examId, studentMap);
-                    studentBatch.clear();
-                }
+                saveBatch(studentBatch, examId, studentMap);
+                studentBatch.clear();
             }
         }
         reader.close();
@@ -489,7 +480,6 @@ public class FileService {
             List<StudentData> parsed = parseChunkWithClaude(
                     headerLine + "\n" + String.join("\n", csvChunk), separator);
             studentBatch.addAll(parsed);
-            totalStudents += parsed.size();
         }
 
         // 8. Save remaining students
@@ -499,7 +489,6 @@ public class FileService {
 
         // 9. Update total students on exam
         exam.setId(examId);
-        exam.setTotalStudentsAttempted(totalStudents);
         examRepository.save(exam);
     }
 
