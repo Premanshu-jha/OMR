@@ -1,12 +1,7 @@
 package org.example.studentdashboard.Service;
 import com.mongodb.client.gridfs.model.GridFSFile;
-import com.opencsv.CSVParser;
-import com.opencsv.CSVParserBuilder;
-import com.opencsv.CSVReader;
-import com.opencsv.CSVReaderBuilder;
-import com.opencsv.bean.CsvToBean;
-import com.opencsv.bean.CsvToBeanBuilder;
-import org.springframework.core.ParameterizedTypeReference;
+import com.fasterxml.jackson.core.type.TypeReference;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import java.nio.charset.StandardCharsets;
 import jakarta.transaction.Transactional;
 import org.bson.Document;
@@ -69,7 +64,7 @@ public class FileService {
     }
 
     private static final int CHUNK_SIZE = 100;
-
+    private final ObjectMapper objectMapper = new ObjectMapper();
     private static final String SYSTEM_PROMPT = """
             You are a CSV parser. You will receive a header row and a chunk of CSV data rows.
             Return ONLY a valid JSON array of student objects — no explanation, no markdown, no code blocks.
@@ -304,11 +299,17 @@ public class FileService {
         int maxRetries = 3;
         for (int attempt = 1; attempt <= maxRetries; attempt++) {
             try {
-                return chatClient.prompt()
+                String response = chatClient.prompt()
                         .system(SYSTEM_PROMPT)
                         .user("The CSV separator is '" + separator + "'. Parse this CSV chunk:\n\n" + csvChunk)
                         .call()
-                        .entity(new ParameterizedTypeReference<List<StudentData>>() {});
+                        .content();
+                response = response.replaceAll("(?s)```json\\s*", "")
+                        .replaceAll("(?s)```\\s*", "")
+                        .trim();
+
+                return objectMapper.readValue(response, new TypeReference<List<StudentData>>() {});
+
             } catch (Exception e) {
                 System.err.printf("Attempt %d failed: %s%n", attempt, e.getMessage());
                 if (attempt == maxRetries) throw new RuntimeException("Claude parsing failed after retries!");
