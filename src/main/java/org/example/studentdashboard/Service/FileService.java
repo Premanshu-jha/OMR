@@ -495,7 +495,7 @@ public class FileService {
                     .totalWrongAnswers(data.getTotalWrongAnswers())
                     .totalPositiveMarks(data.getTotalPositiveMarks())
                     .totalNegativeMarks(data.getTotalNegativeMarks())
-                    .totalMarks(data.getTotalMarks())
+                    .totalMarksScored(data.getTotalMarks())
                     .totalTimeSpent(data.getTotalTimeSpent())
                     .avgTimeEachQuestion(data.getAvgTimeEachQuestion())
                     .rank(data.getRank())

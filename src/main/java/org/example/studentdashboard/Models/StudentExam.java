@@ -68,7 +68,7 @@ public class StudentExam {
     private Integer totalWrongAnswers;
     private Integer totalPositiveMarks;
     private Integer totalNegativeMarks;
-    private Integer totalMarks;
+    private Integer totalMarksScored;
     private String totalTimeSpent;
     private String avgTimeEachQuestion;
     private Long rank;
