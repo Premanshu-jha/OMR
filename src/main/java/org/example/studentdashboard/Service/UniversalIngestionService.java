@@ -56,8 +56,19 @@ public class UniversalIngestionService {
         throw new RuntimeException("TIMEOUT: File '" + fileName + "' not indexed within 15 seconds.");
     }
 
+    private void deleteByFileName(String fileName) {
+        try {
+            String sql = "DELETE FROM document_store WHERE metadata->>'fileName' = ?";
+            int deleted = jdbcTemplate.update(sql, fileName);
+            System.out.println("Deleted " + deleted + " existing vectors for: " + fileName);
+        } catch (Exception e) {
+            System.err.println("Warning: Could not delete existing vectors for " + fileName + ": " + e.getMessage());
+        }
+    }
+
     private void safeAdd(List<Document> docs, String fileName) {
         try {
+            deleteByFileName(fileName);
             documentVectorStore.add(docs);
         } catch (Exception e) {
             throw new RuntimeException("CRITICAL: Failed to write to VectorStore: " + e.getMessage(), e);
