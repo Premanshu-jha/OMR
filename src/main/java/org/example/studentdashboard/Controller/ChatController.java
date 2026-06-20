@@ -45,7 +45,7 @@ public class ChatController {
     }
 
     @DeleteMapping("/delete/{fileId}")
-    public void deleteFile(@RequestParam String fileName,@RequestParam String fileId){
+    public void deleteFile(@RequestParam String fileName,@PathVariable String fileId){
          chatService.chatDeleteFile(fileName,fileId);
     }
 
