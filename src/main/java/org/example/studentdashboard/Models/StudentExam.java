@@ -10,7 +10,7 @@ import lombok.*;
 @AllArgsConstructor
 @Table(indexes = {
         @Index(name = "student_index", columnList = "student_id"),
-@Index(name = "exam_index",columnList = "exam_id")
+@Index(name = "exam_index",columnList = "exam_id"),@Index(name = "exam_rank_index",columnList = "exam_id,rank")
 }
 )
 @EqualsAndHashCode(onlyExplicitlyIncluded = true)
@@ -71,7 +71,10 @@ public class StudentExam {
     private Integer totalMarksScored;
     private String totalTimeSpent;
     private String avgTimeEachQuestion;
+
+    @Column(name = "rank")
     private Long rank;
+
     private String timeOutside;
     private String examStartTime;
     private String examEndTime;

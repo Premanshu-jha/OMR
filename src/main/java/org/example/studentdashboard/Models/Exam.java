@@ -1,6 +1,7 @@
 package org.example.studentdashboard.Models;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import jakarta.persistence.*;
 import lombok.*;
 
@@ -17,6 +18,7 @@ import java.util.List;
         @Index(name = "exam_identifier_index",columnList = "exam_identifier"),
         @Index(name = "exam_type_index",columnList = "exam_type")
 })
+@JsonIgnoreProperties({"hibernateLazyInitializer", "handler"})
 public class Exam {
 
     @Id

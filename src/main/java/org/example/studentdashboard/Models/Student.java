@@ -1,6 +1,7 @@
 package org.example.studentdashboard.Models;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import jakarta.persistence.*;
 import lombok.*;
 import org.example.studentdashboard.Enums.Role;
@@ -19,6 +20,7 @@ import java.util.List;
         @Index(name = "name_index",columnList = "name"),
         @Index(name = "city_index",columnList = "city")
 })
+@JsonIgnoreProperties({"hibernateLazyInitializer", "handler"})
 public class Student {
     @Id
     @GeneratedValue(strategy = GenerationType.SEQUENCE,generator = "studentSequenceGenerator")
