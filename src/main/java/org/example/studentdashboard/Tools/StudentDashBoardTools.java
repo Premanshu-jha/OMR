@@ -76,10 +76,12 @@ public class StudentDashBoardTools {
     }
 
     @Tool(description = """
-                               Call this to answer questions about rankings or top students.
-                               Specify the subject ('physics', 'maths', 'chemistry') and optionally an examIdentifier.
-                               If no examIdentifier is provided, it will return global rankings across all exams.
-                               """)
+        Call this to answer questions about rankings. 
+        If the user asks for "top rankers" or "overall rankings" without specifying a subject, 
+        call this tool with subject='total'. 
+        Otherwise, specify the subject ('physics', 'maths', 'chemistry').
+        Optionally provide an examIdentifier.
+        """)
     public String getTopPerformersBySubject(String subject, String examIdentifier, int limit) {
         if (limit > 100) limit = 100;
         Pageable page = PageRequest.of(0, limit);
