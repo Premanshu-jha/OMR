@@ -7,7 +7,6 @@ import org.example.studentdashboard.Repositories.ExamRepository;
 import org.example.studentdashboard.Repositories.StudentExamRepository;
 import org.example.studentdashboard.Repositories.StudentRepository;
 import org.example.studentdashboard.Service.ExamService;
-import org.springframework.ai.anthropic.AnthropicChatModel;
 import org.springframework.ai.document.Document;
 import org.springframework.ai.tool.annotation.Tool;
 import org.springframework.ai.vectorstore.SearchRequest;
@@ -34,11 +33,12 @@ public class StudentDashBoardTools {
                                  StudentExamRepository studentExamRepository,
                                  ExamRepository examRepository,
                                  @Qualifier("documentVectorStore") VectorStore documentVectorStore,
-                                 AnthropicChatModel chatModel){
+                                 ExamService examService){
         this.studentRepository = studentRepository;
         this.studentExamRepository = studentExamRepository;
         this.examRepository = examRepository;
         this.documentVectorStore = documentVectorStore;
+        this.examService = examService;
     }
 
     @Tool(description = "Call this to retrieve personal details like name, phone, city, or class for a specific student using their roll number.")
