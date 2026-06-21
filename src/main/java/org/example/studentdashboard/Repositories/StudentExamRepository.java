@@ -5,6 +5,7 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.query.Param;
 
 import java.util.List;
 
@@ -22,16 +23,32 @@ public interface StudentExamRepository extends JpaRepository<StudentExam,Long> {
 
     public List<StudentExam> findByExam_ExamIdentifier(String examIdentifier);
 
-    @Query("SELECT se FROM StudentExam se ORDER BY se.physicsMarksScored DESC")
-    public List<StudentExam> findTopByPhysicsMarksDesc(Pageable pageable);
+    @Query("""
+    SELECT se FROM StudentExam se 
+    WHERE (:examId IS NULL OR se.exam.examIdentifier = :examId) 
+    ORDER BY se.physicsMarksScored DESC
+""")
+    public List<StudentExam> findTopByPhysicsMarksDesc(@Param("examId") String examId,Pageable pageable);
 
-    @Query("SELECT se FROM StudentExam se ORDER BY se.mathsMarksScored DESC")
-    public List<StudentExam> findTopByMathsMarksDesc(Pageable pageable);
+    @Query("""
+    SELECT se FROM StudentExam se 
+    WHERE (:examId IS NULL OR se.exam.examIdentifier = :examId) 
+    ORDER BY se.mathsMarksScored DESC
+""")
+    public List<StudentExam> findTopByMathsMarksDesc(@Param("examId") String examId,Pageable pageable);
 
-    @Query("SELECT se FROM StudentExam se ORDER BY se.chemistryMarksScored DESC")
-    public List<StudentExam> findTopByChemistryMarksDesc(Pageable pageable);
+    @Query("""
+    SELECT se FROM StudentExam se 
+    WHERE (:examId IS NULL OR se.exam.examIdentifier = :examId) 
+    ORDER BY se.chemistryMarksScored DESC
+""")
+    public List<StudentExam> findTopByChemistryMarksDesc(@Param("examId") String examId,Pageable pageable);
 
-    @Query("SELECT se FROM StudentExam se ORDER BY se.totalMarksScored DESC")
-    public List<StudentExam> findTopMarksDesc(Pageable pageable);
+    @Query("""
+    SELECT se FROM StudentExam se 
+    WHERE (:examId IS NULL OR se.exam.examIdentifier = :examId) 
+    ORDER BY se.totalMarksScored DESC
+""")
+    public List<StudentExam> findTopMarksDesc(@Param("examId") String examId, Pageable pageable);
 
 }

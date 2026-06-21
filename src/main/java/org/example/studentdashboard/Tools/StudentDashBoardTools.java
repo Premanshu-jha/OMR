@@ -64,26 +64,39 @@ public class StudentDashBoardTools {
         return studentExamRepository.findByExam_ExamIdentifier(examIdentifier);
     }
 
-    @Tool(description = "Call this to answer questions about rankings or top students. Specify the subject ('physics', 'maths', 'chemistry') or leave null for total aggregate marks.")
-    public String getTopPerformersBySubject(String subject, int limit) {
+    @Tool(description = """
+            Call this to retrieve a list of exams.
+            Optionally provide an 'examType' (e.g., 'Internal', 'External') to filter the results.
+            If no examType is provided, it will return all available exams.
+            """)
+    public List<Exam> getAllExams(String examType) {
+        return examRepository.findByExamType(examType);
+    }
+
+    @Tool(description = """
+                               Call this to answer questions about rankings or top students.
+                               Specify the subject ('physics', 'maths', 'chemistry') and optionally an examIdentifier.
+                               If no examIdentifier is provided, it will return global rankings across all exams.
+                               """)
+    public String getTopPerformersBySubject(String subject, String examIdentifier, int limit) {
         if (limit > 100) limit = 100;
         Pageable page = PageRequest.of(0, limit);
         List<StudentExam> results;
         String subjectKey = (subject == null) ? "total" : subject.toLowerCase();
 
         switch (subjectKey) {
-            case "physics" -> results = studentExamRepository.findTopByPhysicsMarksDesc(page);
-            case "maths" -> results = studentExamRepository.findTopByMathsMarksDesc(page);
-            case "chemistry" -> results = studentExamRepository.findTopByChemistryMarksDesc(page);
-            case "total" -> results = studentExamRepository.findTopMarksDesc(page);
+            case "physics" -> results = studentExamRepository.findTopByPhysicsMarksDesc(examIdentifier, page);
+            case "maths" -> results = studentExamRepository.findTopByMathsMarksDesc(examIdentifier, page);
+            case "chemistry" -> results = studentExamRepository.findTopByChemistryMarksDesc(examIdentifier, page);
+            case "total" -> results = studentExamRepository.findTopMarksDesc(examIdentifier, page);
             default -> {
                 return "Subject not recognized. Choose 'physics', 'maths', 'chemistry', or omit for 'total'.";
             }
         }
 
-        if (results.isEmpty()) return "No records found.";
+        if (results.isEmpty()) return "No records found for this exam.";
 
-        StringBuilder sb = new StringBuilder("Top " + limit + " performers in " + subjectKey + ":\n");
+        StringBuilder sb = new StringBuilder("Top " + limit + " performers in " + subjectKey + " for " + examIdentifier + ":\n");
         for (StudentExam se : results) {
             int score = switch (subjectKey) {
                 case "physics" -> se.getPhysicsMarksScored();
@@ -93,12 +106,11 @@ public class StudentDashBoardTools {
                 default -> 0;
             };
             sb.append("- ").append(se.getStudent().getName())
-                    .append(" (Exam: ").append(se.getExam().getExamIdentifier())
+                    .append(" (Roll No: ").append(se.getStudent().getRollNo())
                     .append(") Score: ").append(score).append("\n");
         }
         return sb.toString();
     }
-
     @Tool(name = "searchDocumentDatabase", description = "Call this for ANY question about uploaded files, exam papers, instructions, diagrams, or textual content from PDFs/Excel files. Use this if the user asks about the content of a file.")
     public String searchDocumentDatabase(String query) {
         SearchRequest searchRequest = SearchRequest.builder()
