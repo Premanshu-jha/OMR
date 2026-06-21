@@ -6,6 +6,7 @@ import org.example.studentdashboard.Models.StudentExam;
 import org.example.studentdashboard.Repositories.ExamRepository;
 import org.example.studentdashboard.Repositories.StudentExamRepository;
 import org.example.studentdashboard.Repositories.StudentRepository;
+import org.example.studentdashboard.Service.ExamService;
 import org.springframework.ai.anthropic.AnthropicChatModel;
 import org.springframework.ai.document.Document;
 import org.springframework.ai.tool.annotation.Tool;
@@ -27,6 +28,7 @@ public class StudentDashBoardTools {
     private final StudentExamRepository studentExamRepository;
     private final ExamRepository examRepository;
     private final VectorStore documentVectorStore;
+    private ExamService examService;
 
     public StudentDashBoardTools(StudentRepository studentRepository,
                                  StudentExamRepository studentExamRepository,
@@ -70,7 +72,7 @@ public class StudentDashBoardTools {
             If no examType is provided, it will return all available exams.
             """)
     public List<Exam> getAllExams(String examType) {
-        return examRepository.findByExamType(examType);
+        return examService.getExams(examType);
     }
 
     @Tool(description = """
