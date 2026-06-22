@@ -76,42 +76,49 @@ public class StudentDashBoardTools {
     }
 
     @Tool(description = """
-        Call this to answer questions about rankings. 
-        If the user asks for "top rankers" or "overall rankings" without specifying a subject, 
-        call this tool with subject='total'. 
-        Otherwise, specify the subject ('physics', 'maths', 'chemistry').
-        Optionally provide an examIdentifier.
-        """)
+    Call this to answer questions about rankings. 
+    If the user asks for "top rankers" or "overall rankings" without specifying a subject, 
+    call this tool with subject='total'. 
+    Otherwise, specify the subject ('physics', 'maths', 'chemistry').
+    Optionally provide an examIdentifier.
+    """)
     public String getTopPerformersBySubject(String subject, String examIdentifier, int limit) {
-        if (limit > 100) limit = 100;
-        Pageable page = PageRequest.of(0, limit);
+        // 1. Enforce safety limits
+        int safeLimit = Math.max(1, Math.min(limit, 100));
+        Pageable page = PageRequest.of(0, safeLimit);
         List<StudentExam> results;
-        String subjectKey = (subject == null) ? "total" : subject.toLowerCase();
 
+        // 2. Default to 'total' if null
+        String subjectKey = (subject == null || subject.trim().isEmpty()) ? "total" : subject.toLowerCase();
+
+        // 3. Call the new rank-based repository methods
         switch (subjectKey) {
-            case "physics" -> results = studentExamRepository.findTopByPhysicsMarksDesc(examIdentifier, page);
-            case "maths" -> results = studentExamRepository.findTopByMathsMarksDesc(examIdentifier, page);
-            case "chemistry" -> results = studentExamRepository.findTopByChemistryMarksDesc(examIdentifier, page);
-            case "total" -> results = studentExamRepository.findTopMarksDesc(examIdentifier, page);
+            case "physics" -> results = studentExamRepository.findTopByPhysicsRank(examIdentifier, page);
+            case "maths" -> results = studentExamRepository.findTopByMathsRank(examIdentifier, page);
+            case "chemistry" -> results = studentExamRepository.findTopByChemistryRank(examIdentifier, page);
+            case "total" -> results = studentExamRepository.findTopRankers(examIdentifier, page);
             default -> {
-                return "Subject not recognized. Choose 'physics', 'maths', 'chemistry', or omit for 'total'.";
+                return "Subject not recognized. Choose 'physics', 'maths', 'chemistry', or 'total'.";
             }
         }
 
         if (results.isEmpty()) return "No records found for this exam.";
 
-        StringBuilder sb = new StringBuilder("Top " + limit + " performers in " + subjectKey + " for " + examIdentifier + ":\n");
+        // 4. Build output using the rank fields
+        StringBuilder sb = new StringBuilder("Top " + safeLimit + " performers in " + subjectKey + " for " + (examIdentifier == null ? "all exams" : examIdentifier) + ":\n");
+
         for (StudentExam se : results) {
-            int score = switch (subjectKey) {
-                case "physics" -> se.getPhysicsMarksScored();
-                case "maths" -> se.getMathsMarksScored();
-                case "chemistry" -> se.getChemistryMarksScored();
-                case "total" -> se.getTotalMarksScored();
-                default -> 0;
+            Long rank = switch (subjectKey) {
+                case "physics" -> se.getPhysicsRank();
+                case "maths" -> se.getMathsRank();
+                case "chemistry" -> se.getChemistryRank();
+                case "total" -> se.getRank();
+                default -> 0L;
             };
+
             sb.append("- ").append(se.getStudent().getName())
                     .append(" (Roll No: ").append(se.getStudent().getRollNo())
-                    .append(") Score: ").append(score).append("\n");
+                    .append(") Rank: #").append(rank).append("\n");
         }
         return sb.toString();
     }

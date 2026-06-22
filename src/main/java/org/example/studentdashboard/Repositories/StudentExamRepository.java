@@ -26,29 +26,28 @@ public interface StudentExamRepository extends JpaRepository<StudentExam,Long> {
     @Query("""
     SELECT se FROM StudentExam se 
     WHERE (:examId IS NULL OR se.exam.examIdentifier = :examId) 
-    ORDER BY se.physicsMarksScored DESC
+    ORDER BY se.physicsRank ASC
 """)
-    public List<StudentExam> findTopByPhysicsMarksDesc(@Param("examId") String examId,Pageable pageable);
+    public List<StudentExam> findTopByPhysicsRank(@Param("examId") String examId, Pageable pageable);
 
     @Query("""
     SELECT se FROM StudentExam se 
     WHERE (:examId IS NULL OR se.exam.examIdentifier = :examId) 
-    ORDER BY se.mathsMarksScored DESC
+    ORDER BY se.mathsRank ASC
 """)
-    public List<StudentExam> findTopByMathsMarksDesc(@Param("examId") String examId,Pageable pageable);
+    public List<StudentExam> findTopByMathsRank(@Param("examId") String examId, Pageable pageable);
 
     @Query("""
     SELECT se FROM StudentExam se 
     WHERE (:examId IS NULL OR se.exam.examIdentifier = :examId) 
-    ORDER BY se.chemistryMarksScored DESC
+    ORDER BY se.chemistryRank ASC
 """)
-    public List<StudentExam> findTopByChemistryMarksDesc(@Param("examId") String examId,Pageable pageable);
+    public List<StudentExam> findTopByChemistryRank(@Param("examId") String examId, Pageable pageable);
 
     @Query("""
     SELECT se FROM StudentExam se 
     WHERE (:examId IS NULL OR se.exam.examIdentifier = :examId) 
-    ORDER BY se.totalMarksScored DESC
+    ORDER BY se.rank ASC
 """)
-    public List<StudentExam> findTopMarksDesc(@Param("examId") String examId, Pageable pageable);
-
+    public List<StudentExam> findTopRankers(@Param("examId") String examId, Pageable pageable);
 }
