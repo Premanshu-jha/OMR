@@ -538,7 +538,7 @@ public class FileService {
         String examType = getExamTypeByFileName(examIdentifier);
         if(examType == null) {
             throw new ResponseStatusException(
-                    HttpStatus.CONFLICT,
+                    HttpStatus.BAD_REQUEST,
                     "Please check the file name! must have one of these present to identify exam type:[MPT,APT,EPT]"
             );
         }
