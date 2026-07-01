@@ -25,29 +25,29 @@ public interface StudentExamRepository extends JpaRepository<StudentExam,Long> {
 
     @Query("""
     SELECT se FROM StudentExam se 
-    WHERE (:examId IS NULL OR se.exam.examIdentifier = :examId) 
+    WHERE (:examIdentifier IS NULL OR se.exam.examIdentifier = :examIdentifier) 
     ORDER BY se.physicsRank ASC
 """)
-    public List<StudentExam> findTopByPhysicsRank(@Param("examId") String examId, Pageable pageable);
+    public List<StudentExam> findTopByPhysicsRank(@Param("examIdentifier") String examIdentifier, Pageable pageable);
 
     @Query("""
     SELECT se FROM StudentExam se 
-    WHERE (:examId IS NULL OR se.exam.examIdentifier = :examId) 
+    WHERE (:examIdentifier IS NULL OR se.exam.examIdentifier = :examIdentifier) 
     ORDER BY se.mathsRank ASC
 """)
-    public List<StudentExam> findTopByMathsRank(@Param("examId") String examId, Pageable pageable);
+    public List<StudentExam> findTopByMathsRank(@Param("examIdentifier") String examIdentifier, Pageable pageable);
 
     @Query("""
     SELECT se FROM StudentExam se 
-    WHERE (:examId IS NULL OR se.exam.examIdentifier = :examId) 
+    WHERE (:examIdentifier IS NULL OR se.exam.examIdentifier = :examIdentifier) 
     ORDER BY se.chemistryRank ASC
 """)
-    public List<StudentExam> findTopByChemistryRank(@Param("examId") String examId, Pageable pageable);
+    public List<StudentExam> findTopByChemistryRank(@Param("examIdentifier") String examIdentifier, Pageable pageable);
 
     @Query("""
     SELECT se FROM StudentExam se 
-    WHERE (:examId IS NULL OR se.exam.examIdentifier = :examId) 
+    WHERE (:examIdentifier IS NULL OR se.exam.examIdentifier = :examIdentifier) 
     ORDER BY se.rank ASC
 """)
-    public List<StudentExam> findTopRankers(@Param("examId") String examId, Pageable pageable);
+    public List<StudentExam> findTopRankers(@Param("examIdentifier") String examIdentifier, Pageable pageable);
 }

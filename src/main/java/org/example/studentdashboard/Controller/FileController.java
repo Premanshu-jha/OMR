@@ -55,9 +55,9 @@ public class FileController {
     }
 
 
-    @PostMapping("/{examType}/bulk-update")
-    public ResponseEntity<String> bulkUpdate(@RequestParam("file") MultipartFile file,@PathVariable String examType) throws IOException {
-        fileService.bulkPushFileData(file,examType);
+    @PostMapping("/bulk-update")
+    public ResponseEntity<String> bulkUpdate(@RequestParam("file") MultipartFile file) throws IOException {
+        fileService.bulkPushFileData(file);
         return ResponseEntity.ok("File records pushed succesfully!");
     }
 
