@@ -315,9 +315,18 @@ public class FileService {
         gridFsTemplate.delete(chunkQuery);
     }
 
-    public FileResponse uploadFile(MultipartFile file, String examType, String rollNumber) throws IOException {
+    public String getExamTypeByFileName(String fileName){
+        if(fileName.contains("MPT")) return "JEE-MAINS";
+        else if(fileName.contains("APT")) return "JEE-ADVANCED";
+        else if(fileName.contains("EPT")) return "EAPCET";
+        return null;
+    }
+
+    public FileResponse uploadFile(MultipartFile file, String rollNumber) throws IOException {
         String originalFileName = file.getOriginalFilename();
         String examIdentifier = getExamIdentifier(originalFileName);
+
+        String examType = getExamTypeByFileName(examIdentifier);
 
         GridFSFile existingFile = gridFsTemplate.findOne(
                 new Query(Criteria.where("filename").is(originalFileName)));
@@ -526,18 +535,13 @@ public class FileService {
         // 2. Check duplicate exam
         String examIdentifier = getExamIdentifier(file.getOriginalFilename());
 
-        String examType = null;
-        if(examIdentifier.contains("MPT")) examType = "JEE-MAINS";
-        else if(examIdentifier.contains("APT")) examType = "JEE-ADVANCED";
-        else if(examIdentifier.contains("EPT")) examType = "EAPCET";
-        else{
+        String examType = getExamTypeByFileName(examIdentifier);
+        if(examType == null) {
             throw new ResponseStatusException(
                     HttpStatus.CONFLICT,
                     "Please check the file name! must have one of these present to identify exam type:[MPT,APT,EPT]"
             );
-
         }
-
         System.out.println("examIdentifier: " + examIdentifier);
         if (examRepository.findByExamIdentifier(examIdentifier).isPresent())
             throw new ResponseStatusException(

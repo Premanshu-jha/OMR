@@ -78,7 +78,7 @@ public class ChatService {
     }
 
     public FileResponse chatUploadFile(MultipartFile file, String rollNumber) throws Exception {
-        FileResponse fileRes = fileService.uploadFile(file, null, rollNumber);
+        FileResponse fileRes = fileService.uploadFile(file, rollNumber);
         universalIngestionService.ingestFile(file);
         return fileRes;
     }
