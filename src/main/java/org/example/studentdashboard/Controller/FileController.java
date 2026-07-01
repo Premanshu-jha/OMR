@@ -29,8 +29,8 @@ public class FileController {
 
 
     @PostMapping("/upload")
-    public FileResponse uploadFile(@RequestParam("file") MultipartFile file,@RequestParam(required = false) String examType,@RequestParam(required = false) String rollNumber) throws IOException {
-         return fileService.uploadFile(file,examType,rollNumber);
+    public FileResponse uploadFile(@RequestParam("file") MultipartFile file,@RequestParam(required = false) String rollNumber) throws IOException {
+         return fileService.uploadFile(file,rollNumber);
     }
 
     @DeleteMapping("/delete/{id}")
