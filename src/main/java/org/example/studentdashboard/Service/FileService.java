@@ -15,10 +15,12 @@ import org.springframework.data.mongodb.core.query.Query;
 import org.springframework.data.mongodb.gridfs.GridFsResource;
 import org.springframework.data.mongodb.gridfs.GridFsTemplate;
 import org.springframework.http.HttpHeaders;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
+import org.springframework.web.server.ResponseStatusException;
 import org.springframework.web.servlet.mvc.method.annotation.StreamingResponseBody;
 
 import java.io.*;
@@ -509,13 +511,11 @@ public class FileService {
     }
 
     @Transactional
-    public void bulkPushFileData(MultipartFile file, String examType) throws IOException {
+    public void bulkPushFileData(MultipartFile file) throws IOException {
         System.out.println("\n========================================");
         System.out.println("=== bulkPushFileData START ===");
-        System.out.println("  file=" + file.getOriginalFilename() + " | examType=" + examType);
         System.out.println("========================================");
 
-        // 1. Build existing student map
         Map<String, Long> studentMap = new HashMap<>();
         studentRepository.findAll().forEach(student -> {
             if (!studentMap.containsKey(student.getRollNo()))
@@ -525,9 +525,25 @@ public class FileService {
 
         // 2. Check duplicate exam
         String examIdentifier = getExamIdentifier(file.getOriginalFilename());
+
+        String examType = null;
+        if(examIdentifier.contains("MPT")) examType = "JEE-MAINS";
+        else if(examIdentifier.contains("APT")) examType = "JEE-ADVANCED";
+        else if(examIdentifier.contains("EPT")) examType = "EAPCET";
+        else{
+            throw new ResponseStatusException(
+                    HttpStatus.CONFLICT,
+                    "Please check the file name! must have one of these present to identify exam type:[MPT,APT,EPT]"
+            );
+
+        }
+
         System.out.println("examIdentifier: " + examIdentifier);
         if (examRepository.findByExamIdentifier(examIdentifier).isPresent())
-            throw new RuntimeException("Records already present for this exam!");
+            throw new ResponseStatusException(
+                    HttpStatus.CONFLICT,
+                    "Records already present for this exam!"
+            );
 
         // 3. Read header and detect separator
         BufferedReader reader = new BufferedReader(
