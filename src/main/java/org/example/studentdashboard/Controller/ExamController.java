@@ -18,8 +18,8 @@ public class ExamController {
     }
 
     @GetMapping
-    public List<Exam> getExams(@RequestParam(required = false) String type){
-        return examService.getExams(type);
+    public List<Exam> getExams(@RequestParam(required = false) String type,@RequestParam(required = false) String examIdentifier){
+        return examService.getExams(type,examIdentifier);
     }
 
     @GetMapping("/{examId}")

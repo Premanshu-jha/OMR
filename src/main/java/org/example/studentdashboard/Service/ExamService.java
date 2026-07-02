@@ -44,8 +44,15 @@ public class ExamService {
         return studentExamRepository.findByExam_Id(examId,pageReq).getContent();
     }
 
-    public List<Exam> getExams(String type){
-        if(type != null) return examRepository.findByExamType(type);
+    public List<Exam> getExams(String type,String examIdentifier){
+        if(type != null && examIdentifier == null) return examRepository.findByExamType(type);
+
+        else if(examIdentifier != null && type == null)
+            return examRepository.findByExamIdentifierContainingIgnoreCase(examIdentifier);
+
+        else if(type != null && examIdentifier != null)
+            return examRepository.findByExamTypeAndExamIdentifierContainingIgnoreCase(type,examIdentifier);
+
          return examRepository.findAll();
     }
 
