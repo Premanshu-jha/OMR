@@ -16,7 +16,8 @@ import java.util.List;
 @Builder
 @Table(indexes = {
         @Index(name = "exam_identifier_index",columnList = "exam_identifier"),
-        @Index(name = "exam_type_index",columnList = "exam_type")
+        @Index(name = "exam_type_index",columnList = "exam_type"),
+        @Index(name = "type_identifier_exam_index",columnList = "exam_type,exam_identifier")
 })
 @JsonIgnoreProperties({"hibernateLazyInitializer", "handler"})
 public class Exam {

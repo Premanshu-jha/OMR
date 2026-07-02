@@ -68,11 +68,11 @@ public class StudentDashBoardTools {
 
     @Tool(description = """
             Call this to retrieve a list of exams.
-            Optionally provide an 'examType' (e.g., 'Internal', 'External') to filter the results.
+            Optionally provide an 'examType' or 'examIdentifier' or both to filter the results.
             If no examType is provided, it will return all available exams.
             """)
-    public List<Exam> getAllExams(String examType) {
-        return examService.getExams(examType);
+    public List<Exam> getAllExams(String examType,String examIdentifier) {
+        return examService.getExams(examType,examIdentifier);
     }
 
     @Tool(description = """
