@@ -59,7 +59,8 @@ public class ChatService {
                 .advisors(a -> a.param(ChatMemory.CONVERSATION_ID, userId))
                 .stream()
                 .content()
-                .map(chunk -> Map.of("text",chunk));
+                .map(chunk -> Map.of("text",chunk))
+                .startWith(Map.of("text", ""));
     }
 
     public List<Map<String,Object>> getChatHistory(String userId){
